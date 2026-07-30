@@ -1,0 +1,74 @@
+name: UI / Design Task
+description: Request a new UI design, component mockup, or UX refinement
+title: "[UI/DESIGN]: "
+labels: ["ui"]
+projects: ["vespaiach/1"]
+body:
+    - type: markdown
+      attributes:
+          value: Please provide clear context and requirements to help guide the design process.
+
+    - type: input
+      id: parent-issue
+      attributes:
+          label: Parent Issue
+          description: Is this design task tied to an existing issue or feature request?
+          placeholder: "#42"
+      validations:
+          required: false
+
+    - type: dropdown
+      id: design-type
+      attributes:
+          label: Design Scope
+          description: What type of design work is needed?
+          options:
+              - Full Screen / Page Layout
+              - New Component (e.g., Card, Modal, Navigation Bar)
+              - Design System / Theme / Style Guide Update
+              - UX / Usability Improvement
+              - Visual Assets / Icons / Graphics
+      validations:
+          required: true
+
+    - type: textarea
+      id: objective
+      attributes:
+          label: Objective & User Context
+          description: What problem does this design solve, or what user goal does it support?
+          placeholder: Describe the user story, context, or pain point...
+      validations:
+          required: true
+
+    - type: textarea
+      id: requirements
+      attributes:
+          label: Content & Interaction Requirements
+          description: List specific elements, states (hover, focus, dark mode), or text content that must be included.
+          placeholder: |
+              - Primary action button for "Submit"
+              - Empty state layout when no data exists
+              - Support both light and dark themes
+      validations:
+          required: false
+
+    - type: textarea
+      id: references
+      attributes:
+          label: Additional references
+          description: Paste links to existing Figma files, moodboards, competitor examples, or any other relevant resources that can inform the design.
+          placeholder: "Figma link, moodboard, or reference URLs..."
+
+    - type: checkboxes
+      id: deliverables
+      attributes:
+          label: Required Deliverables
+          options:
+              - label: Low-fidelity Wireframe / Sketch
+                required: false
+              - label: High-fidelity UI Mockup
+                required: false
+              - label: Interactive Prototype (Figma)
+                required: false
+              - label: Developer Handoff Specs & Assets
+                required: false

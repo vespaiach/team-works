@@ -1,0 +1,30 @@
+name: Sub-task / Action Item
+description: Template for tracked sub-issues or individual tasks.
+title: "[SUB-TASK]: "
+labels: ["sub-task"]
+body:
+  - type: input
+    id: parent-issue
+    attributes:
+      label: Parent Issue
+      description: Enter the parent issue number or full URL (e.g., #42 or https://github.com/org/repo/issues/42).
+      placeholder: "#42"
+    validations:
+      required: false
+
+  - type: textarea
+    id: task-description
+    attributes:
+      label: Overview
+      description: What specific piece of work needs to be completed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-list
+    attributes:
+      label: Tasks
+      description: List the individual tasks that need to be completed.
+      placeholder: Use checklists if there are multiple steps or tasks.
+    validations:
+      required: true

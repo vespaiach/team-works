@@ -1,0 +1,101 @@
+name: Infrastructure / DevOps Task
+description: Request or track server configuration, CI/CD updates, database changes, or Nginx/Docker setup
+title: "[INFRA/DEVOPS]: "
+labels: ["infra"]
+projects: ["vespaiach/1"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Please provide context and specifications for this infrastructure or deployment task.
+
+    - type: input
+      id: parent-issue
+      attributes:
+          label: Parent Issue
+          description: Is this task linked to an existing issue, tenant launch, or feature epic?
+          placeholder: "#42"
+      validations:
+          required: false
+
+    - type: dropdown
+      id: category
+      attributes:
+          label: Category
+          description: Select the primary system or component involved.
+          options:
+              - CI/CD & GitHub Actions Automation
+              - Nginx / Reverse Proxy / SSL Certificates
+              - Database (PostgreSQL / Redis / Migrations)
+              - Cloud / VPS / Server Provisioning / DNS
+              - Docker / Containerization
+              - Environment Variables & Secrets Management
+              - Security / Access Control / SSH
+      validations:
+          required: true
+
+    - type: dropdown
+      id: environment
+      attributes:
+          label: Target Environment
+          description: Which environment will this change impact?
+          options:
+              - Production
+              - Staging / Preview
+              - Development / Local
+              - All Environments
+      validations:
+          required: true
+
+    - type: textarea
+      id: objective
+      attributes:
+          label: Objective & Requirements
+          description: What needs to be configured, migrated, or provisioned?
+          placeholder: Describe the desired infrastructure outcome or issue to resolve...
+      validations:
+          required: true
+
+    - type: textarea
+      id: implementation-details
+      attributes:
+          label: Implementation Plan / Config Specifications
+          description: Detail specific ports, domains, environment keys, or CLI commands.
+          placeholder: |
+              - Configure Nginx server block for tenant subdomain
+              - Tune PostgreSQL connection pool limit
+              - Add secret `PRODUCTION_DATABASE_URL` to GitHub Secrets
+      validations:
+          required: false
+
+    - type: textarea
+      id: logs-configs
+      attributes:
+          label: Logs, Terminal Output, or Config Snippets
+          description: Paste relevant Nginx blocks, Dockerfiles, GitHub Action output, or error logs.
+          render: shell
+          placeholder: Paste commands, error traces, or configuration blocks here...
+
+    - type: checkboxes
+      id: impact-downtime
+      attributes:
+          label: Impact & Safety Checks
+          options:
+              - label: Requires planned downtime or maintenance window
+                required: false
+              - label: Database backup required prior to execution
+                required: false
+              - label: Secret or ENV variable rotation involved
+                required: false
+
+    - type: checkboxes
+      id: definition-of-done
+      attributes:
+          label: Definition of Done
+          options:
+              - label: Verified in Staging/Dev environment
+                required: false
+              - label: Deployed and verified in Production
+                required: false
+              - label: Internal documentation / README updated
+                required: false
