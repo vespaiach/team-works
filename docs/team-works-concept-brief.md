@@ -54,20 +54,24 @@ The hierarchy is: **Issue (+ sub-issues) → Project (+ milestones) → Roadmap.
 
 Primary entities and their key fields:
 
-- **User** — id, name, email, avatar, role (`admin` | `member`) _(workspace-level)_
-- **Project** — id, name, description, status (`planned` | `active` | `paused` | `completed` | `canceled`), lead (user), start_date, target_date, color
+- **User** — id, name, email, avatar_url, role (`admin` | `member`) _(workspace-level)_, deactivated_at
+- **Project** — id, **key** (`WEB`, immutable), name, description, status (`planned` | `active` | `paused` | `completed` | `canceled`), lead (user), start_date, target_date, color, sort_order
 - **ProjectMember** — project_id, user_id _(no role column; this is what gates writes per-project)_
 - **Milestone** — id, project_id, name, target_date, sort_order
-- **Issue** — id, project_id (**required**), milestone_id (nullable), parent_issue_id (nullable, for sub-issues), title, description, status (`backlog` | `todo` | `in_progress` | `done` | `canceled`), priority (`none` | `low` | `medium` | `high` | `urgent`), assignee_id (nullable), due_date, created_by, sort_order, timestamps
+- **Issue** — id, project_id (**required**), **number** (per-project, permanent — together with the project key this is `WEB-142`), milestone_id (nullable), parent_issue_id (nullable, for sub-issues), title, description, status (`backlog` | `todo` | `in_progress` | `done` | `canceled`), priority (`none` | `low` | `medium` | `high` | `urgent`), assignee_id (nullable), due_date, created_by, sort_order, timestamps
 - **Label** — id, name, color
 - **IssueLabel** — issue_id, label_id (join table, many-to-many)
 - **Comment** — id, issue_id, author_id, body, timestamps
-- **Attachment** — id, issue_id (nullable), comment_id (nullable), filename, path, content_type, size, uploaded_by
-- **Notification** — id, user_id, type (`mention` | `assignment` | `comment`), source_id, read_at, emailed_at
+- **Attachment** — id, issue_id (**required**), comment_id (nullable — set when the file arrived in a comment), filename, storage_path, content_type, size_bytes, uploaded_by
+- **Notification** — id, user_id (recipient), actor_id (who caused it), type (`mention` | `assignment` | `comment`), issue_id (**required**), comment_id (nullable), read_at, emailed_at
 
-Relationships at a glance: a project has many milestones, many issues, and many members (via ProjectMember); a milestone has many issues; an issue can have many sub-issues (self-referencing via `parent_issue_id`), many labels, many comments, and many attachments; a user authors comments, is assigned issues, and belongs to projects.
+Relationships at a glance: a project has many milestones, many issues, and many members (via ProjectMember); a milestone has many issues; an issue can have many sub-issues (self-referencing via `parent_issue_id`, **one level deep** — a sub-issue cannot itself have children), many labels, many comments, and many attachments; a user authors comments, is assigned issues, and belongs to projects.
 
-This schema lives in Postgres (defined with Drizzle) and is the same shape Zero syncs to clients.
+`sort_order` is a fractional index — a string key, not an integer — so a drag on the board writes exactly one row and needs no server round-trip.
+
+This schema lives in Postgres (defined with Drizzle). Zero syncs the same shape to clients with one narrowing: only the six `User` columns listed above reach a client, enforced by the replication publication.
+
+The exact column types, nullability, indexes, cascade rules and invariants are in [data-model.md](./data-model.md), which is the authority where it and this section differ.
 
 ---
 
@@ -87,7 +91,7 @@ Both views are live queries over the same local data — no separate API endpoin
 
 - **Frontend:** Next.js (App Router) + React, built on **Adobe React Aria Components**, styled for a **responsive** layout (mobile + desktop from one codebase). `dnd-kit` for board drag-and-drop. **Roadmap: Frappe Gantt** — the maintained core `frappe-gantt`, wrapped in a thin React component (see note below).
 - **Data layer:** **Zero (Rocicorp)** — reactive queries + optimistic mutations; no separate TanStack Query needed.
-- **Database:** PostgreSQL (logical replication enabled, for Zero).
+- **Database:** PostgreSQL **15 or later** (logical replication enabled, for Zero). The version floor is set by [data-model.md](./data-model.md): column lists in publications, and column-scoped `ON DELETE SET NULL`.
 - **ORM:** Drizzle — used on the server-side mutators.
 
 ### Roadmap rendering — Frappe Gantt
@@ -163,6 +167,7 @@ Planned later, on the **same backbone** — same Postgres, `zero-cache`, Auth.js
 ## 9. Companion documents
 
 - [permissions.md](./permissions.md) — authorization spec: roles, permission matrix, read model, per-mutator write rules.
+- [data-model.md](./data-model.md) — schema spec: column types, ordering, issue identifiers, cascades, indexes, invariants, and the publication that defines Zero's sync set.
 
 ---
 

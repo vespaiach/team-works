@@ -86,12 +86,14 @@ Every syncable table syncs in full to every authenticated client, with one excep
 | Table | Synced to a client when |
 | --- | --- |
 | `Project`, `ProjectMember`, `Milestone`, `Issue`, `Label`, `IssueLabel`, `Comment`, `Attachment` | always |
-| `User` | always — `id`, `name`, `email`, `avatar`, `role` only |
+| `User` | always — `id`, `name`, `email`, `avatar_url`, `role`, `deactivated_at` only |
 | `Notification` | `notification.user_id === user.id` |
 
 Notifications are the only per-user read rule in the system.
 
-Authentication material — sessions, tokens, magic-link state — lives in tables outside the syncable subset and never enters Zero's replica. The `User` columns listed above are the only ones that sync; anything added to that table later is outside the sync set unless explicitly included.
+Authentication material — sessions, tokens, magic-link state — lives in tables outside the syncable subset and never enters Zero's replica. The `User` columns listed above are the only ones that sync; anything added to that table later is outside the sync set unless explicitly included. This is enforced at the replication boundary rather than in application code — [data-model.md](./data-model.md) §3 defines the Postgres publication with an explicit column list, so an unlisted column cannot reach a client even by mistake.
+
+`deactivated_at` syncs because the client cannot otherwise tell an active user from a deactivated one: the assignee picker would offer people who cannot act, and a comment by someone who has left would render with no indication. It exposes nothing sensitive — who still works here is roster state, in a workspace already transparent by design.
 
 The JWT authenticating the sync connection carries the user's `id` and workspace `role`. Project membership is **not** in the token and does not need to be — membership is only consulted server-side during writes (§5), so adding or removing a member takes effect on the very next mutation rather than at the next token refresh.
 
@@ -121,6 +123,12 @@ Every mutator calls the policy module before writing. Grouped by the check perfo
 
 For any mutator taking an issue or comment id, the project used for the `isMember` check is derived server-side from the stored row — never from a client-supplied `project_id`.
 
+**Preconditions beyond the role check.** Passing the permission check is necessary, not sufficient. Three mutators carry an additional guard from [data-model.md](./data-model.md) §9, enforced after authorization and failing the same way:
+
+- `deleteProject` — refuses unless the project's `status` is already `canceled`. Deletion cascades through every milestone, issue, comment and attachment in the project, so it is deliberately two steps, the first of which is reversible.
+- `updateProject` — refuses any change to `key`. The project key is immutable; `WEB-142` must stay valid forever.
+- `createIssue`, `updateIssue` — refuse a `parent_issue_id` that names an issue which itself has a parent. Sub-issue nesting is one level deep.
+
 ---
 
 ## 6. Invariants
@@ -128,8 +136,10 @@ For any mutator taking an issue or comment id, the project used for the `isMembe
 Not permissions, but the write rules become incoherent without them. Each is enforced in the mutators that could violate it.
 
 1. **Every issue belongs to a project.** `Issue.project_id` is `NOT NULL`. This is a change from the brief, which had it nullable. The `isMember` check needs a project to resolve against; a project-less issue has no membership and therefore no answer to "who may edit this". Teams wanting a landing spot for unsorted work create an "Inbox" project. (Enforced by: schema.)
-2. **A sub-issue lives in the same project as its parent.** Otherwise an issue hierarchy spans two write boundaries, and a user can edit a parent but not its children. (Enforced by: `createIssue`, `updateIssue`.)
+2. **A sub-issue lives in the same project as its parent.** Otherwise an issue hierarchy spans two write boundaries, and a user can edit a parent but not its children. (Enforced by: schema — a composite foreign key, per [data-model.md](./data-model.md) §8. This was a mutator check when written; making it structural means no future write path can miss it.)
 3. **An issue cannot change project.** Moving an issue would move it across the write boundary mid-flight, silently changing who can act on it. Not supported in v1. (Enforced by: `updateIssue`.)
+
+[data-model.md](./data-model.md) §9 carries the full list, adding five more that are schema concerns rather than authorization ones: an issue's milestone belongs to its project, nesting is one level deep, `Project.key` is immutable, a project must be canceled before it can be deleted, and issue numbers are monotonic and never reused. The three above are the ones the write rules depend on.
 
 **Not invariants, deliberately:** an issue may be assigned to a non-member, and an @mention may name anyone. Both are legal because everyone can read everything. The assignee picker and mention autocomplete list project members first, with the rest of the workspace below — a UI preference, not an enforced rule. This is what makes member removal a free action (§7).
 
@@ -240,4 +250,10 @@ The `isMember` predicate is the extension point. The future team chat (brief §8
 
 - A convention for controls disabled by permission, with the reason surfaced rather than a dead button.
 - The assigned-non-member state on issue detail (§7).
-- An assignee picker and mention autocomplete that list project members first and the rest of the workspace below (§6).
+- An assignee picker and mention autocomplete that list project members first and the rest of the workspace below (§6). The picker excludes deactivated users, which the `deactivated_at` column added to §4 is what makes possible.
+
+**Amendments this spec received from [data-model.md](./data-model.md) — applied 2026-07-31:**
+
+- §4 — `deactivated_at` added to the synced `User` columns; `avatar` renamed `avatar_url`; the column list is now enforced by the Postgres publication rather than by convention.
+- §5 — three mutators gained preconditions beyond their role check: `deleteProject`, `updateProject`, `createIssue`/`updateIssue`.
+- §6 — invariant 2's enforcement moved from the mutators to the schema, and the full invariant list now lives in data-model.md §9.
