@@ -8,12 +8,14 @@ Repo: `/Users/toannguyen/team-works` (branch: `main`)
 
 Team Works: a self-hosted, Linear-inspired work tracker for one team of <20 people. Milestone/roadmap-driven rather than sprint-driven. Local-first.
 
-Stack (all decided, do not re-litigate): Next.js App Router + React, Adobe React Aria Components, Zero (Rocicorp) for sync + optimistic mutations, PostgreSQL with logical replication, Drizzle on server-side mutators, Auth.js magic-link invite-only auth, dnd-kit for the board, frappe-gantt for the roadmap, attachments on local disk, single VPS running app + zero-cache container + Postgres + nginx.
+Stack (all decided, do not re-litigate): Next.js App Router + React, Adobe React Aria Components, Zero (Rocicorp) for sync + optimistic mutations, PostgreSQL 15+ with logical replication, Drizzle on server-side mutators, hand-written magic-link invite-only auth (no Auth.js), dnd-kit for the board, frappe-gantt for the roadmap, attachments on local disk, single VPS running app + zero-cache container + Postgres + nginx.
 
-## Docs that already exist — READ BOTH FIRST
+## Docs that already exist — READ ALL FOUR FIRST
 
 - `docs/team-works-concept-brief.md` — architecture brief, all v1 decisions settled
 - `docs/permissions.md` — authorization spec, approved and final
+- `docs/data-model.md` — schema spec: columns, cascades, ordering, identifiers, indexes, invariants, the publication
+- `docs/auth.md` — authentication spec: invites, magic links, sessions and rotation, revocation, env contract
 
 ## Decisions from permissions.md that constrain everything downstream
 
@@ -37,28 +39,17 @@ Treat these as settled. Do not reopen them.
 
 ## Repo scaffold does not match the brief
 
-Flag this; don't silently code around it. `package.json` has only Next 14 / React / Tailwind. Missing: Drizzle, Zero, React Aria, Auth.js, dnd-kit, frappe-gantt. `src/types/index.ts` has an unrelated `User` shape. `.env.example` still has a placeholder `SECRET_KEY`. `README.md` is scaffolder boilerplate.
+Flag this; don't silently code around it. `package.json` has only Next 14 / React / Tailwind. Missing: Drizzle, Zero, React Aria, dnd-kit, frappe-gantt, `jose`, `nodemailer` — and explicitly **not** `next-auth`. `src/types/index.ts` has an unrelated `User` shape. `.env.example` still has a placeholder `SECRET_KEY`, superseded by auth.md §10. (`README.md` and `CLAUDE.md` have since been rewritten.)
 
 ## Remaining docs, in priority order
 
-### 1. `docs/data-model.md` — do this next
+### ~~1. `docs/data-model.md`~~ — done
 
-Must answer, because nothing else can proceed without them:
+### ~~2. `docs/auth.md`~~ — done
 
-- **`sort_order` strategy.** Integer reordering breaks under concurrent optimistic drags with Zero + dnd-kit; fractional indexing is the likely answer. Decide it here.
-- **Human-readable issue identifiers** (`TW-142`). No counter entity exists anywhere yet. Per-workspace or per-project sequence?
-- **Soft delete vs hard delete** — matters a lot for a synced replica.
-- **Cascade rules** — delete a project with issues, delete a user who authored comments, sub-issue orphaning.
-- **`Notification.source_id`** is an untyped polymorphic pointer; needs a discriminator.
-- Exact Drizzle column types, nullability, indexes, timestamp/`updated_at` maintenance.
+### 3. `docs/local-dev.md` — do this next
 
-### 2. `docs/auth.md`
-
-Invite issued → magic link → session → JWT for `zero-cache` → expiry/refresh → behavior of a live sync connection when the token expires. Plus first-admin bootstrap, last-admin protection, revocation, deactivation.
-
-### 3. `docs/local-dev.md`
-
-Postgres with `wal_level=logical`, running the `zero-cache` container, env var contract, migration commands, seed data.
+Postgres with `wal_level=logical`, running the `zero-cache` container, migration commands, seed data. The env var contract is already fixed by auth.md §10 — this doc covers filling it locally, including a local SMTP catcher (Mailpit or similar) and the fact that `Secure` cookies are omitted over plain HTTP.
 
 ### 4. `docs/ui-spec.md`
 
@@ -98,14 +89,12 @@ Testing a Zero app: mutator unit tests, permission predicate tests, sync-scope t
 
 Browser support, perf budgets, data volume, retention.
 
-### 13. `README.md` rewrite and `CLAUDE.md`
-
-The README currently misleads about what this project is.
+### ~~13. `README.md` rewrite and `CLAUDE.md`~~ — done
 
 ## How to work
 
 Use the brainstorming skill. Ask **one question at a time**, multiple-choice where possible. Present the design and get approval **before** writing the file. Then write, self-review for placeholders, contradictions, and ambiguity, and commit.
 
-Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time.
+Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time. `README.md` and `CLAUDE.md` now count as reconciliation targets too.
 
-Start with `docs/data-model.md`.
+Start with `docs/local-dev.md`.

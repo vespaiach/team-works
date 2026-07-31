@@ -69,10 +69,11 @@ The client's optimistic run sets its own `updated_at` so the UI has something to
 | Table | Owner |
 | --- | --- |
 | `issue_counter` | this document (§6) |
-| `account`, `session`, `verification_token` | [auth.md](./auth.md), when written — Auth.js's own schema |
-| `invite` | [auth.md](./auth.md), when written |
+| `invite`, `login_token`, `session` | [auth.md](./auth.md) §3 |
 
 The auth tables are named here only to fix the publication boundary. Their columns are not this document's concern; what matters is that they are outside the sync set, as [permissions.md](./permissions.md) §4 requires.
+
+An earlier revision listed `account`, `session` and `verification_token` as "Auth.js's own schema". Authentication is now hand-written (auth.md §1), and `account` is gone entirely — it is OAuth provider bookkeeping that an email-only system never writes.
 
 ---
 
@@ -623,10 +624,17 @@ Everything else syncs in full. permissions.md §4 and §8 are the authority; the
 
 The current scaffold is unmodified output from a generic project generator and does not match the brief. Nothing in this document can be implemented against it as it stands.
 
-- `package.json` has only `next`, `react`, `react-dom` and Tailwind. It needs `drizzle-orm`, `drizzle-kit`, `pg`, `@rocicorp/zero`, `uuidv7` and `fractional-indexing` before any of this schema exists — and, per the brief's stack, `next-auth`, `react-aria-components`, `@dnd-kit/core` and `frappe-gantt` for the rest.
+- `package.json` has only `next`, `react`, `react-dom` and Tailwind. It needs `drizzle-orm`, `drizzle-kit`, `pg`, `@rocicorp/zero`, `uuidv7` and `fractional-indexing` before any of this schema exists — and, per the brief's stack, `react-aria-components`, `@dnd-kit/core` and `frappe-gantt` for the rest, plus `jose` and `nodemailer` for [auth.md](./auth.md). Not `next-auth`: authentication is hand-written.
 - `src/lib/db.ts` and `src/types/index.ts` are generator output. `src/types/index.ts` defines a `User` shape unrelated to §7. Both should be deleted rather than adapted.
-- `.env.example` carries a placeholder `SECRET_KEY`. auth.md owns the real environment contract; the placeholder should not survive into it.
+- `.env.example` carries a placeholder `SECRET_KEY`. [auth.md](./auth.md) §10 now defines the real environment contract, which replaces the file wholesale; the placeholder is deleted rather than renamed.
 - `README.md` still describes the project as scaffolder output.
+
+### Amendments this spec received from [auth.md](./auth.md) — applied 2026-07-31
+
+- **§2** — the non-synced auth tables are now `invite`, `login_token` and `session`. `account` and `verification_token` are gone; authentication is hand-written rather than Auth.js.
+- **§12** — `next-auth` dropped from the scaffold's dependency list in favour of `jose` and `nodemailer`; the `SECRET_KEY` item is discharged by auth.md §10.
+
+The three auth tables follow §1's conventions with one deviation, recorded there: `login_token` carries no `updated_at`, because `consumed_at` is the only mutation those rows ever see.
 
 ### Deferred, with owners named
 

@@ -11,11 +11,12 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/team-works-concept-brief.md](docs/team-works-concept-brief.md) — scope, stack, deployment, build order
 - [docs/permissions.md](docs/permissions.md) — authorization model
 - [docs/data-model.md](docs/data-model.md) — schema, sync boundary, invariants
+- [docs/auth.md](docs/auth.md) — invites, magic links, sessions, environment contract
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack
 
-Next.js (App Router) + React Aria Components · [Zero](https://zero.rocicorp.dev/) for sync and optimistic mutations · PostgreSQL 15+ with logical replication · Drizzle · Auth.js magic-link invites · dnd-kit for the board · Frappe Gantt for the roadmap. Self-hosted on a single VPS.
+Next.js (App Router) + React Aria Components · [Zero](https://zero.rocicorp.dev/) for sync and optimistic mutations · PostgreSQL 15+ with logical replication · Drizzle · hand-written magic-link invite auth · dnd-kit for the board · Frappe Gantt for the roadmap. Self-hosted on a single VPS.
 
 None of it is installed yet; adding it is the first build step.
 

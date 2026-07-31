@@ -111,13 +111,13 @@ Three constraints the mapping above does not resolve on its own, all owned by `r
 
 ### Auth & per-project access
 
-**Auth.js (NextAuth)**, invite-only, email magic-links. See [permissions.md](./permissions.md) for the full spec; the shape is:
+**Hand-written**, invite-only, email magic-links — no Auth.js or other auth library. [auth.md](./auth.md) is the full spec and the authority here; [permissions.md](./permissions.md) takes over once identity is established. The shape is:
 
 - **Workspace role** on User (`admin` | `member`) — admins manage invites/settings, create projects, own project and milestone structure, and can write anywhere.
 - **Per-project membership** via **ProjectMember** — a **write** boundary. Members create and edit issues, comments, and attachments in the projects they belong to.
 - **Reads are workspace-wide.** Every user reads every project. Membership does not hide anything.
 
-Zero authenticates its sync connection with a signed JWT carrying the user's id and workspace role. Its **read rules** are near-trivial as a result — the whole syncable dataset goes to every client, with one exception scoping Notification rows to their owner. Authorization lives in the server-side mutators, which check membership before writing.
+Zero authenticates its sync connection with a signed JWT carrying the user's id and workspace role — a short-lived access token that doubles as the browser's session credential ([auth.md](./auth.md) §2). Its **read rules** are near-trivial as a result — the whole syncable dataset goes to every client, with one exception scoping Notification rows to their owner. Authorization lives in the server-side mutators, which check membership before writing.
 
 What counts as "the syncable dataset" is fixed one layer lower, by the publication in [data-model.md](./data-model.md) §3: ten tables, and for `User` only the six columns in §3 above. So there are two narrowings in total, and only one of them is a Zero read rule — the other is a property of what `zero-cache` replicates at all.
 
@@ -129,15 +129,15 @@ The trade-off is deliberate: there are no confidential projects in v1. Transpare
 
 ### Deployment (VPS)
 
-**Single VPS** runs: the Next.js app (PM2 or systemd), **`zero-cache` as a Docker container on the same box** (decided), PostgreSQL with `wal_level=logical`, and nginx as the reverse proxy with Certbot SSL. Give `zero-cache` fast local storage for its replica. An email-sending path (transactional email) is added for the email side of notifications.
+**Single VPS** runs: the Next.js app (PM2 or systemd), **`zero-cache` as a Docker container on the same box** (decided), PostgreSQL with `wal_level=logical`, and nginx as the reverse proxy with Certbot SSL. Give `zero-cache` fast local storage for its replica. An SMTP path is required from **build step 1**, not step 4 — magic links are how anyone signs in at all ([auth.md](./auth.md) §10). Notification email later reuses the same transport behind an outbox.
 
 ---
 
 ## 6. Suggested build order
 
-1. **Foundation** — Postgres schema (Drizzle) with logical replication, the `zero_data` publication that defines the sync set ([data-model.md](./data-model.md) §3), `zero-cache` running, Zero client schema, Auth.js issuing JWTs, the ProjectMember-based policy module gating mutators, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
+1. **Foundation** — Postgres schema (Drizzle) with logical replication, the `zero_data` publication that defines the sync set ([data-model.md](./data-model.md) §3), `zero-cache` running, Zero client schema, the hand-written auth scheme issuing JWTs ([auth.md](./auth.md)) with SMTP configured, the ProjectMember-based policy module gating mutators, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
 
-   Two items from data-model.md are assigned to this step and should not slip past it: **confirm how Zero maps Postgres `date`** and apply the specified fallback if it does not (§11), and **test the self-referential composite foreign key against a cascading project delete** (§8). Both have decided answers on either branch; both are cheapest to settle before anything is built on top.
+   Three items are assigned to this step and should not slip past it: **confirm how Zero maps Postgres `date`** and apply the specified fallback if it does not ([data-model.md](./data-model.md) §11), **test the self-referential composite foreign key against a cascading project delete** (§8 there), and **confirm Zero re-invokes its `auth` callback when `zero-cache` rejects an expired token** ([auth.md](./auth.md) §5). All three have decided answers on either branch; all three are cheapest to settle before anything is built on top.
 2. **Issues + board** — ZQL queries, custom mutators for create/update/status, the Kanban board with `dnd-kit`. Live by default.
 3. **Projects + milestones + roadmap** — the planning side and the timeline view (rendering per section 5).
 4. **Collaboration & notifications** — comments, @mentions, in-app notifications, and the email path.
@@ -170,15 +170,23 @@ From [data-model.md](./data-model.md):
 13. **Sync scope:** enforced by a Postgres publication with a per-table column list, not by application code
 14. **Postgres floor:** version 15, set by the two features decision 13 and the cascade rules depend on
 
+From [auth.md](./auth.md):
+
+15. **No auth library:** authentication is hand-written — no Auth.js, Lucia or Better Auth. With no passwords, no OAuth and one tenant, what a library would cover is a cookie, a token table and a JWT
+16. **Sessions:** short-lived access JWT (15 min) plus a rotating refresh token in a `session` row (30-day sliding, uncapped). The access JWT is also the token `zero-cache` verifies — one artifact, one secret, delivered as both a cookie and a response body
+17. **Magic links:** `GET` renders a confirmation page and consumes nothing; a `POST` redeems. Mail scanners cannot burn a single-use token
+18. **Invites:** an `invite` row only; the `user` row is created when the link is first redeemed, which leaves the publication's six synced `user` columns untouched
+19. **First admin:** a one-off `admin:grant` CLI over SSH, which doubles as the break-glass recovery from total lockout
+
 **Open**
 
-- No open **decisions**. Two open **verifications**, both with the outcome decided on either branch, both assigned to build step 1: how Zero maps Postgres `date` (data-model.md §11), and whether the self-referential composite foreign key survives a cascading project delete (§8).
+- No open **decisions**. Three open **verifications**, each with the outcome decided on either branch, all assigned to build step 1: how Zero maps Postgres `date` ([data-model.md](./data-model.md) §11), whether the self-referential composite foreign key survives a cascading project delete (§8 there), and whether Zero re-invokes its `auth` callback on token rejection ([auth.md](./auth.md) §5).
 
 ---
 
 ## 8. Future: team chat
 
-Planned later, on the **same backbone** — same Postgres, `zero-cache`, Auth.js/JWT, and React Aria UI. Chat becomes additive: new tables (channels, messages, reactions, read pointers) synced by the existing Zero setup, plus two genuinely new pieces — an **ephemeral presence/typing side-channel** (don't put high-frequency presence in synced Postgres) and **out-of-app push** (the email/notification path generalizes here). The per-project membership model designed now is what lets chat's channel permissions drop in cleanly.
+Planned later, on the **same backbone** — same Postgres, `zero-cache`, session-and-JWT scheme ([auth.md](./auth.md)), and React Aria UI. Chat becomes additive: new tables (channels, messages, reactions, read pointers) synced by the existing Zero setup, plus two genuinely new pieces — an **ephemeral presence/typing side-channel** (don't put high-frequency presence in synced Postgres) and **out-of-app push** (the email/notification path generalizes here). The per-project membership model designed now is what lets chat's channel permissions drop in cleanly.
 
 ---
 
@@ -186,6 +194,7 @@ Planned later, on the **same backbone** — same Postgres, `zero-cache`, Auth.js
 
 - [permissions.md](./permissions.md) — authorization spec: roles, permission matrix, read model, per-mutator write rules.
 - [data-model.md](./data-model.md) — schema spec: column types, ordering, issue identifiers, cascades, indexes, invariants, and the publication that defines Zero's sync set.
+- [auth.md](./auth.md) — authentication spec: invites, magic links, sessions and rotation, the token `zero-cache` verifies, deactivation and revocation, and the environment contract.
 
 ---
 

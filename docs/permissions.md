@@ -151,15 +151,15 @@ Not permissions, but the write rules become incoherent without them. Each is enf
 
 **An assigned non-member.** They can see their issue but cannot update it — not even to move it on the board. The issue detail view explains why and names the project they would need to be added to. This is a real state, reachable by removing a member, and the UI must handle it rather than rendering dead controls.
 
-**The last admin.** The last remaining admin cannot be demoted to member or deactivated. The first user in a fresh workspace is created as an admin during setup; every subsequent user arrives by invitation.
+**The last admin.** The last remaining admin cannot be demoted to member or deactivated. The check races — two concurrent demotions can each observe two admins — so it runs inside the mutator's own transaction as a `SELECT … FOR UPDATE` over the other active admins ([auth.md](./auth.md) §8). The first user in a fresh workspace is created as an admin by the `admin:grant` CLI, which is also the recovery path when every admin loses mailbox access; every subsequent user arrives by invitation.
 
 **Content authored by removed or deactivated users.** Comments, attachments, and `created_by` references survive. The name still renders. Removing someone from a project or deactivating them revokes write access; it does not rewrite history.
 
 **Losing write access while the app is open.** No rows leave the client's sync set, so nothing disappears and no route breaks. Controls that were enabled become disabled on the next render. This is the main practical benefit of a transparent read model.
 
-**Promotion to admin.** Takes effect on the next JWT issuance, since the workspace role is a token claim. The session's token is refreshed on role change so the user does not have to sign out and back in.
+**Promotion to admin.** Authority takes effect immediately: the server loads the actor's role from the database on every mutation (§8), so a promoted user can write as an admin on their very next action. What lags is the `role` claim in the token, and therefore only which controls the UI renders — up to the access token's lifetime, currently 15 minutes ([auth.md](./auth.md) §8). The user never has to sign out and back in.
 
-**Deactivated users.** Cannot sign in and receive no notifications. Their `ProjectMember` rows are retained, so reactivation restores prior access.
+**Deactivated users.** Cannot sign in and receive no notifications. Signing in, refreshing and writing all stop immediately; the client keeps receiving synced rows until its access token expires, which auth.md §8 tabulates. Their `ProjectMember` rows are retained, so reactivation restores prior access.
 
 ---
 
@@ -200,6 +200,8 @@ Zero's read rules do **not** consume this module. With a transparent read model 
 
 The client's `Membership` set is derived from the synced `ProjectMember` rows for the current user. The server derives its own from the database and never trusts the client's.
 
+**The same holds for the `Actor`.** On the server it is built by `loadActor()`, which re-reads `role` and `deactivated_at` from Postgres inside the mutation ([auth.md](./auth.md) §6) — never from the JWT's claims, which may be up to fifteen minutes stale. The token establishes *identity*; the database establishes *authority*. The `role` claim drives client-side rendering and nothing else.
+
 ---
 
 ## 9. Failure behavior
@@ -207,7 +209,7 @@ The client's `Membership` set is derived from the synced `ProjectMember` rows fo
 - **Rejected write.** The server mutator throws, Zero rolls back the optimistic write, and the UI shows a toast naming what failed and why ("Only project members can edit issues in Website Redesign"). The local store returns to its pre-write state on its own.
 - **Disconnected.** Writes are rejected before they are attempted, per the read-only-when-offline decision in the brief. Inputs render in a clearly disabled state explaining that changes need a connection. Reads continue to work against the local store.
 - **Not found.** Since every user can read every project, a missing row means the row genuinely does not exist — deleted, or a bad link. There is no "you don't have access" read state, and the UI should not imply one.
-- **Expired token.** The sync connection drops and the client behaves as disconnected until the token refreshes.
+- **Expired token.** The sync connection drops and the client behaves as disconnected until the token refreshes. Zero re-invokes its `auth` callback on rejection, which fetches a new token from the refresh endpoint — [auth.md](./auth.md) §5 is the mechanism behind this sentence. If the refresh itself fails, the user is sent to sign in.
 
 ---
 
@@ -251,6 +253,13 @@ The `isMember` predicate is the extension point. The future team chat (brief §8
 - A convention for controls disabled by permission, with the reason surfaced rather than a dead button.
 - The assigned-non-member state on issue detail (§7).
 - An assignee picker and mention autocomplete that list project members first and the rest of the workspace below (§6). The picker excludes deactivated users, which the `deactivated_at` column added to §4 is what makes possible.
+
+**Amendments this spec received from [auth.md](./auth.md) — applied 2026-07-31:**
+
+- §7 — the last-admin check is specified as a `SELECT … FOR UPDATE` inside the mutator's transaction, since the naive count races. "Created as an admin during setup" is now the `admin:grant` CLI, which is also the lockout recovery path.
+- §7 — promotion and deactivation restated against where authority actually comes from: both take effect immediately on the write path, and only the UI lags by the access token's lifetime.
+- §8 — the server's `Actor` is loaded from the database by `loadActor()`, never built from the token's claims. The rule that already covered `Membership` now covers `role`.
+- §9 — the expired-token case points at the refresh mechanism that implements it.
 
 **Amendments this spec received from [data-model.md](./data-model.md) — applied 2026-07-31:**
 
