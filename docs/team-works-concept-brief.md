@@ -33,7 +33,7 @@ Like Linear, it's **local-first**: the UI reads and writes a local copy of the d
 - Two views: a **Kanban board** (working) and a **timeline / roadmap** (planning)
 - Comments with @mentions
 - **Notifications: in-app (synced) and email**
-- Invite-only auth, with **per-project access** (membership-based)
+- Invite-only auth, with **per-project write access** (membership-based); all projects are readable workspace-wide
 - **Responsive on mobile** (one responsive web app, not a separate native build)
 - Live, real-time updates across clients (via the sync engine, by default)
 
@@ -56,9 +56,9 @@ Primary entities and their key fields:
 
 - **User** — id, name, email, avatar, role (`admin` | `member`) _(workspace-level)_
 - **Project** — id, name, description, status (`planned` | `active` | `paused` | `completed` | `canceled`), lead (user), start_date, target_date, color
-- **ProjectMember** — project_id, user_id, role (`lead` | `member`) _(this is what makes access per-project)_
+- **ProjectMember** — project_id, user_id _(no role column; this is what gates writes per-project)_
 - **Milestone** — id, project_id, name, target_date, sort_order
-- **Issue** — id, project_id (nullable), milestone_id (nullable), parent_issue_id (nullable, for sub-issues), title, description, status (`backlog` | `todo` | `in_progress` | `done` | `canceled`), priority (`none` | `low` | `medium` | `high` | `urgent`), assignee_id (nullable), due_date, created_by, sort_order, timestamps
+- **Issue** — id, project_id (**required**), milestone_id (nullable), parent_issue_id (nullable, for sub-issues), title, description, status (`backlog` | `todo` | `in_progress` | `done` | `canceled`), priority (`none` | `low` | `medium` | `high` | `urgent`), assignee_id (nullable), due_date, created_by, sort_order, timestamps
 - **Label** — id, name, color
 - **IssueLabel** — issue_id, label_id (join table, many-to-many)
 - **Comment** — id, issue_id, author_id, body, timestamps
@@ -100,12 +100,15 @@ Use the maintained core package (`frappe-gantt`, currently v1.2.2 — MIT, SVG) 
 
 ### Auth & per-project access
 
-**Auth.js (NextAuth)**, invite-only, email magic-links. Two layers of role:
+**Auth.js (NextAuth)**, invite-only, email magic-links. See [permissions.md](./permissions.md) for the full spec; the shape is:
 
-- **Workspace role** on User (`admin` | `member`) — admins manage invites/settings and can see all projects.
-- **Per-project membership** via **ProjectMember** — regular members see and act on only the projects they belong to.
+- **Workspace role** on User (`admin` | `member`) — admins manage invites/settings, create projects, own project and milestone structure, and can write anywhere.
+- **Per-project membership** via **ProjectMember** — a **write** boundary. Members create and edit issues, comments, and attachments in the projects they belong to.
+- **Reads are workspace-wide.** Every user reads every project. Membership does not hide anything.
 
-Zero authenticates its sync connection with a signed JWT, and its **read rules** key off ProjectMembership: a client only syncs projects the user is a member of (or all, if workspace admin). Design this membership/permission layer generically — it's the same shape the future team chat's channel access will reuse.
+Zero authenticates its sync connection with a signed JWT carrying the user's id and workspace role. Its **read rules** are near-trivial as a result — the whole syncable dataset goes to every client, with one exception scoping Notification rows to their owner. Authorization lives in the server-side mutators, which check membership before writing.
+
+The trade-off is deliberate: there are no confidential projects in v1. Transparency is what keeps the model simple — nothing vanishes from a client mid-session, an @mention can name anyone, and removing someone from a project needs no cleanup. Design the membership layer generically anyway — it's the same shape the future team chat's channel access will reuse, and chat is where a genuine read boundary first becomes necessary.
 
 ### Attachments / storage
 
@@ -119,7 +122,7 @@ Zero authenticates its sync connection with a signed JWT, and its **read rules**
 
 ## 6. Suggested build order
 
-1. **Foundation** — Postgres schema (Drizzle) with logical replication, `zero-cache` running, Zero client schema, Auth.js issuing JWTs, ProjectMember-based read rules, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
+1. **Foundation** — Postgres schema (Drizzle) with logical replication, `zero-cache` running, Zero client schema, Auth.js issuing JWTs, the ProjectMember-based policy module gating mutators, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
 2. **Issues + board** — ZQL queries, custom mutators for create/update/status, the Kanban board with `dnd-kit`. Live by default.
 3. **Projects + milestones + roadmap** — the planning side and the timeline view (rendering per section 7).
 4. **Collaboration & notifications** — comments, @mentions, in-app notifications, and the email path.
@@ -137,7 +140,7 @@ Zero authenticates its sync connection with a signed JWT, and its **read rules**
 1. **Name:** Team Works
 2. **Notifications:** in-app and email
 3. **Mobile:** responsive web (one codebase)
-4. **Access:** per-project (membership-based; new ProjectMember entity, drives Zero read rules)
+4. **Access:** reads are workspace-wide; writes are per-project (membership-based, via ProjectMember). See [permissions.md](./permissions.md).
 5. **Roadmap rendering:** Frappe Gantt (lightweight, SVG)
 6. **Object storage:** local disk on the VPS
 7. **`zero-cache` placement:** same VPS as the app
@@ -152,6 +155,14 @@ Zero authenticates its sync connection with a signed JWT, and its **read rules**
 ## 8. Future: team chat
 
 Planned later, on the **same backbone** — same Postgres, `zero-cache`, Auth.js/JWT, and React Aria UI. Chat becomes additive: new tables (channels, messages, reactions, read pointers) synced by the existing Zero setup, plus two genuinely new pieces — an **ephemeral presence/typing side-channel** (don't put high-frequency presence in synced Postgres) and **out-of-app push** (the email/notification path generalizes here). The per-project membership model designed now is what lets chat's channel permissions drop in cleanly.
+
+---
+
+---
+
+## 9. Companion documents
+
+- [permissions.md](./permissions.md) — authorization spec: roles, permission matrix, read model, per-mutator write rules.
 
 ---
 

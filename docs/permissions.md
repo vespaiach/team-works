@@ -229,12 +229,12 @@ The `isMember` predicate is the extension point. The future team chat (brief §8
 
 ## 12. Changes this spec requires elsewhere
 
-**To the concept brief:**
+**To the concept brief — applied 2026-07-31, the two documents now agree:**
 
-- §3 — `Issue.project_id` becomes `NOT NULL` (§6.1); the brief has it nullable.
-- §3 — `ProjectMember.role` is removed (§2); the brief has `lead` | `member`.
-- §5 — the brief states Zero's read rules key off ProjectMembership and that "a client only syncs projects the user is a member of". They no longer do; membership governs writes only (§4).
-- §7 decision 4 — "Access: per-project (membership-based; drives Zero read rules)" should read "drives write rules".
+- §2 and §7.4 — access restated as workspace-wide reads, per-project writes.
+- §3 — `Issue.project_id` is now required; `ProjectMember.role` removed.
+- §5 — the auth section rewritten: read rules are near-trivial, authorization lives in the mutators, and the no-confidential-projects trade-off is recorded.
+- §6 — build step 1 now names the policy module rather than ProjectMember-based read rules.
 
 **To the UI spec, when written:**
 
