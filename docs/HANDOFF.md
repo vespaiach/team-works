@@ -1,0 +1,111 @@
+# Team Works — documentation continuation
+
+_Handoff prompt. Paste the whole file into a fresh session to continue the documentation work. Delete it once the doc backlog is done._
+
+Repo: `/Users/toannguyen/team-works` (branch: `main`)
+
+## What this is
+
+Team Works: a self-hosted, Linear-inspired work tracker for one team of <20 people. Milestone/roadmap-driven rather than sprint-driven. Local-first.
+
+Stack (all decided, do not re-litigate): Next.js App Router + React, Adobe React Aria Components, Zero (Rocicorp) for sync + optimistic mutations, PostgreSQL with logical replication, Drizzle on server-side mutators, Auth.js magic-link invite-only auth, dnd-kit for the board, frappe-gantt for the roadmap, attachments on local disk, single VPS running app + zero-cache container + Postgres + nginx.
+
+## Docs that already exist — READ BOTH FIRST
+
+- `docs/team-works-concept-brief.md` — architecture brief, all v1 decisions settled
+- `docs/permissions.md` — authorization spec, approved and final
+
+## Decisions from permissions.md that constrain everything downstream
+
+Treat these as settled. Do not reopen them.
+
+- Two roles only: `User.role` = `admin` | `member` (workspace-level)
+- `ProjectMember(project_id, user_id)`. **No role column.** `Project.lead` is informational only.
+- **Reads are workspace-wide.** Every user reads every project. Membership gates **writes** only.
+- Zero read rules are near-trivial: the entire syncable dataset syncs to every client, except `Notification` rows, which scope to their owner. That is the only read rule.
+- Accepted limitation: no confidential projects in v1.
+- `Issue.project_id` is `NOT NULL` (changed from the brief).
+- A sub-issue must live in the same project as its parent.
+- An issue cannot change project in v1.
+- Issues may be assigned to non-members; @mentions may name anyone. Pickers list project members first, everyone else below — UI preference, not an enforced rule.
+- Members set `status = 'canceled'`; only admins hard-delete.
+- Admins curate the global label set; any member applies labels.
+- Comments and attachments carry an authorship check: edit your own only. Admins may delete anyone's, but nobody may edit another user's comment.
+- Admins own project settings, milestones, membership, invites, roles.
+- Authorization lives in `src/lib/permissions.ts`: pure predicates, no I/O, consumed by (1) server mutators — authoritative — and (2) the client, for disabling controls and for Zero's optimistic client-side mutator run. Zero read rules do **not** consume it.
+- The JWT carries user id + workspace role only. Membership is resolved server-side.
+
+## Repo scaffold does not match the brief
+
+Flag this; don't silently code around it. `package.json` has only Next 14 / React / Tailwind. Missing: Drizzle, Zero, React Aria, Auth.js, dnd-kit, frappe-gantt. `src/types/index.ts` has an unrelated `User` shape. `.env.example` still has a placeholder `SECRET_KEY`. `README.md` is scaffolder boilerplate.
+
+## Remaining docs, in priority order
+
+### 1. `docs/data-model.md` — do this next
+
+Must answer, because nothing else can proceed without them:
+
+- **`sort_order` strategy.** Integer reordering breaks under concurrent optimistic drags with Zero + dnd-kit; fractional indexing is the likely answer. Decide it here.
+- **Human-readable issue identifiers** (`TW-142`). No counter entity exists anywhere yet. Per-workspace or per-project sequence?
+- **Soft delete vs hard delete** — matters a lot for a synced replica.
+- **Cascade rules** — delete a project with issues, delete a user who authored comments, sub-issue orphaning.
+- **`Notification.source_id`** is an untyped polymorphic pointer; needs a discriminator.
+- Exact Drizzle column types, nullability, indexes, timestamp/`updated_at` maintenance.
+
+### 2. `docs/auth.md`
+
+Invite issued → magic link → session → JWT for `zero-cache` → expiry/refresh → behavior of a live sync connection when the token expires. Plus first-admin bootstrap, last-admin protection, revocation, deactivation.
+
+### 3. `docs/local-dev.md`
+
+Postgres with `wal_level=logical`, running the `zero-cache` container, env var contract, migration commands, seed data.
+
+### 4. `docs/ui-spec.md`
+
+Screen inventory, React Aria component set, design tokens, breakpoints. States the brief never covers: empty, loading, error, offline/read-only, permission-disabled. Board semantics: cross-column ordering, grouping, what a drag changes.
+
+Two states `permissions.md` specifically owes this doc: the **assigned-non-member** issue view, and a convention for **controls disabled by permission** that surfaces the reason rather than showing a dead button.
+
+### 5. `docs/notifications.md`
+
+The least-specified feature. Trigger events, @mention parsing, server-side notification writes, dedup/batching, `emailed_at` semantics, sending mechanism (outbox table + worker?), retries, unsubscribe.
+
+### 6. `docs/attachments.md`
+
+Upload endpoint, and **authorized download** — files on local disk must be access-checked, not served statically by nginx. Size/MIME limits, path layout, orphan cleanup, backup implications.
+
+### 7. `docs/roadmap-view.md`
+
+Frappe Gantt semantics: null start/target dates, milestones without dates, what `progress` derives from, whether dragging a project moves its milestones, mobile behavior.
+
+### 8. `docs/deployment.md`
+
+Runbook. Provisioning, nginx, Certbot, PM2/systemd, backups (Postgres + attachment disk), restore drill. Critically: the **schema migration procedure including how the `zero-cache` replica is handled** — a migration can require a replica reset.
+
+### 9. `docs/adr/`
+
+One short ADR per settled decision in brief §7. Zero and frappe-gantt matter most; they're the ones you'd revisit.
+
+### 10. `docs/state-machines.md`
+
+Issue and project status transitions, legal moves, side effects (does closing a parent close sub-issues? do all-done issues complete a milestone?).
+
+### 11. `docs/testing.md`
+
+Testing a Zero app: mutator unit tests, permission predicate tests, sync-scope tests, whether E2E runs against a real `zero-cache`.
+
+### 12. `docs/non-functional.md`
+
+Browser support, perf budgets, data volume, retention.
+
+### 13. `README.md` rewrite and `CLAUDE.md`
+
+The README currently misleads about what this project is.
+
+## How to work
+
+Use the brainstorming skill. Ask **one question at a time**, multiple-choice where possible. Present the design and get approval **before** writing the file. Then write, self-review for placeholders, contradictions, and ambiguity, and commit.
+
+Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time.
+
+Start with `docs/data-model.md`.
