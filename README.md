@@ -12,6 +12,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/permissions.md](docs/permissions.md) — authorization model
 - [docs/data-model.md](docs/data-model.md) — schema, sync boundary, invariants
 - [docs/auth.md](docs/auth.md) — invites, magic links, sessions, environment contract
+- [docs/local-dev.md](docs/local-dev.md) — local setup: Postgres, `zero-cache`, migrations, seed data
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack

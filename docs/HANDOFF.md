@@ -47,9 +47,7 @@ Flag this; don't silently code around it. `package.json` has only Next 14 / Reac
 
 ### ~~2. `docs/auth.md`~~ — done
 
-### 3. `docs/local-dev.md` — do this next
-
-Postgres with `wal_level=logical`, running the `zero-cache` container, migration commands, seed data. The env var contract is already fixed by auth.md §10 — this doc covers filling it locally, including a local SMTP catcher (Mailpit or similar) and the fact that `Secure` cookies are omitted over plain HTTP.
+### ~~3. `docs/local-dev.md`~~ — done
 
 ### 4. `docs/ui-spec.md`
 
@@ -97,4 +95,4 @@ Use the brainstorming skill. Ask **one question at a time**, multiple-choice whe
 
 Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time. `README.md` and `CLAUDE.md` now count as reconciliation targets too.
 
-Start with `docs/local-dev.md`.
+Start with `docs/ui-spec.md`.
