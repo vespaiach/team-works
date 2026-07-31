@@ -77,7 +77,7 @@ The exact column types, nullability, indexes, cascade rules and invariants are i
 
 ## 4. The two views
 
-**Kanban board (working).** Columns are issue statuses; cards are issues. Drag a card between columns to change its status. Cards show priority, assignee avatar, labels, and due date at a glance. Optionally re-group by assignee or priority.
+**Kanban board (working).** Columns are issue statuses; cards are issues. Drag a card between columns to change its status. Cards show priority, assignee avatar, labels, and due date at a glance. Optionally re-group by assignee or priority — every grouping is the same single project-wide order, filtered, so reordering in one grouping also shifts relative position in the others ([data-model.md](./data-model.md) §5).
 
 **Timeline / roadmap (planning).** Projects and milestones plotted across time as bars. This is where you see the shape of the quarter — what's planned, what overlaps, what's slipping. Rendered with **Frappe Gantt** (lightweight, SVG-based; integration note in section 5).
 
@@ -93,14 +93,21 @@ Both views are live queries over the same local data — no separate API endpoin
 - **Data layer:** **Zero (Rocicorp)** — reactive queries + optimistic mutations; no separate TanStack Query needed.
 - **Database:** PostgreSQL **15 or later** (logical replication enabled, for Zero). The version floor is set by [data-model.md](./data-model.md): column lists in publications, and column-scoped `ON DELETE SET NULL`.
 - **ORM:** Drizzle — used on the server-side mutators.
+- **Supporting libraries:** `uuidv7` (client-generatable, time-ordered primary keys) and `fractional-indexing` (the `sort_order` keys) — both load-bearing for the data model rather than incidental.
 
 ### Roadmap rendering — Frappe Gantt
 
 Use the maintained core package (`frappe-gantt`, currently v1.2.2 — MIT, SVG) rather than the old community React wrappers, which are years stale and target outdated versions. Wrap it yourself in a small React component: a container `ref` plus a `useEffect` that runs `new Gantt(el, tasks, options)`, calls `.refresh(tasks)` when data changes, and cleans up on unmount. Map your data to its task shape `{ id, name, start, end, progress, custom_class }` — projects become bars (`start_date` → `target_date`), milestones become marker bars (`custom_class: 'bar-milestone'`); leave `dependencies` empty since the roadmap isn't dependency-scheduled. Use the Month / Quarter / Year view modes for zoom, override its CSS to match the app's styling, and wire its `onDateChange` callback to a Zero mutator so dragging a bar reschedules the project. The one wrinkle: it's an imperative SVG chart, so you bridge Zero's reactive live-query data to it by calling `.refresh()` whenever the underlying data updates.
 
+Three constraints the mapping above does not resolve on its own, all owned by `roadmap-view.md` when written:
+
+- **Dragging a bar is an admin-only action.** `onDateChange` calls `updateProject` or `updateMilestone`, and [permissions.md](./permissions.md) §5 restricts both to admins. For everyone else the chart is read-only, and the drag handles must be disabled rather than left to fail on write.
+- **Not every project has a bar.** `start_date` and `target_date` are independently nullable ([data-model.md](./data-model.md) §7), as is `milestone.target_date`. Frappe Gantt needs a start and an end, so undated and half-dated records need a defined treatment — omitted from the chart, listed beside it, or given an inferred range.
+- **`progress` has no backing column.** Nothing in the schema stores it. It has to be derived — the obvious candidate being the share of a project's or milestone's issues at `status = 'done'` — and that derivation is a decision, not a lookup.
+
 ### Real-time / sync layer — Zero
 
-`zero-cache` keeps a SQLite replica of the syncable subset of Postgres (via logical replication) and bridges Postgres to clients. `zero-client` runs in the browser with a local store; components read with `useQuery` in ZQL (instant, query-driven sync). Writes go through custom mutators — instant on the client, authoritative on the server (via Drizzle). Conflicts resolve by server reconciliation. **No offline writes** — reads of synced data work offline; writes are rejected when disconnected (acceptable, confirmed — design a clear disconnected-input state). Dataset is far inside Zero's ~100GB comfort range.
+`zero-cache` keeps a SQLite replica of the syncable subset of Postgres (via logical replication) and bridges Postgres to clients. `zero-client` runs in the browser with a local store; components read with `useQuery` in ZQL (instant, query-driven sync). Writes go through custom mutators — instant on the client, authoritative on the server (via Drizzle). Conflicts resolve by server reconciliation. One exception to "instant": deletes cascade in Postgres, which the client's optimistic run cannot reproduce, so a delete settles in two phases — the target vanishes at once, its dependent rows a moment later ([data-model.md](./data-model.md) §4). **No offline writes** — reads of synced data work offline; writes are rejected when disconnected (acceptable, confirmed — design a clear disconnected-input state). Dataset is far inside Zero's ~100GB comfort range.
 
 ### Auth & per-project access
 
@@ -111,6 +118,8 @@ Use the maintained core package (`frappe-gantt`, currently v1.2.2 — MIT, SVG) 
 - **Reads are workspace-wide.** Every user reads every project. Membership does not hide anything.
 
 Zero authenticates its sync connection with a signed JWT carrying the user's id and workspace role. Its **read rules** are near-trivial as a result — the whole syncable dataset goes to every client, with one exception scoping Notification rows to their owner. Authorization lives in the server-side mutators, which check membership before writing.
+
+What counts as "the syncable dataset" is fixed one layer lower, by the publication in [data-model.md](./data-model.md) §3: ten tables, and for `User` only the six columns in §3 above. So there are two narrowings in total, and only one of them is a Zero read rule — the other is a property of what `zero-cache` replicates at all.
 
 The trade-off is deliberate: there are no confidential projects in v1. Transparency is what keeps the model simple — nothing vanishes from a client mid-session, an @mention can name anyone, and removing someone from a project needs no cleanup. Design the membership layer generically anyway — it's the same shape the future team chat's channel access will reuse, and chat is where a genuine read boundary first becomes necessary.
 
@@ -126,9 +135,11 @@ The trade-off is deliberate: there are no confidential projects in v1. Transpare
 
 ## 6. Suggested build order
 
-1. **Foundation** — Postgres schema (Drizzle) with logical replication, `zero-cache` running, Zero client schema, Auth.js issuing JWTs, the ProjectMember-based policy module gating mutators, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
+1. **Foundation** — Postgres schema (Drizzle) with logical replication, the `zero_data` publication that defines the sync set ([data-model.md](./data-model.md) §3), `zero-cache` running, Zero client schema, Auth.js issuing JWTs, the ProjectMember-based policy module gating mutators, the responsive app shell with React Aria. Get one synced query rendering end-to-end.
+
+   Two items from data-model.md are assigned to this step and should not slip past it: **confirm how Zero maps Postgres `date`** and apply the specified fallback if it does not (§11), and **test the self-referential composite foreign key against a cascading project delete** (§8). Both have decided answers on either branch; both are cheapest to settle before anything is built on top.
 2. **Issues + board** — ZQL queries, custom mutators for create/update/status, the Kanban board with `dnd-kit`. Live by default.
-3. **Projects + milestones + roadmap** — the planning side and the timeline view (rendering per section 7).
+3. **Projects + milestones + roadmap** — the planning side and the timeline view (rendering per section 5).
 4. **Collaboration & notifications** — comments, @mentions, in-app notifications, and the email path.
 5. **Issue depth** — labels, sub-issues, attachments (local disk), priority/due-date polish.
 6. **Mobile polish** — tighten the responsive layout for phones across both views.
@@ -150,17 +161,24 @@ The trade-off is deliberate: there are no confidential projects in v1. Transpare
 7. **`zero-cache` placement:** same VPS as the app
 8. **Offline UX:** read-only-when-offline is acceptable
 
+From [data-model.md](./data-model.md):
+
+9. **Ordering:** fractional index (base-62 strings), one project-wide key per issue, ties broken by id
+10. **Issue identifiers:** `WEB-142` — immutable per-project key plus a monotonic per-project number
+11. **Deletion:** hard delete throughout; `status = 'canceled'` is the reversible path, and users are deactivated rather than deleted
+12. **Primary keys:** UUIDv7, generated client-side
+13. **Sync scope:** enforced by a Postgres publication with a per-table column list, not by application code
+14. **Postgres floor:** version 15, set by the two features decision 13 and the cascade rules depend on
+
 **Open**
 
-- None — all v1 decisions are settled.
+- No open **decisions**. Two open **verifications**, both with the outcome decided on either branch, both assigned to build step 1: how Zero maps Postgres `date` (data-model.md §11), and whether the self-referential composite foreign key survives a cascading project delete (§8).
 
 ---
 
 ## 8. Future: team chat
 
 Planned later, on the **same backbone** — same Postgres, `zero-cache`, Auth.js/JWT, and React Aria UI. Chat becomes additive: new tables (channels, messages, reactions, read pointers) synced by the existing Zero setup, plus two genuinely new pieces — an **ephemeral presence/typing side-channel** (don't put high-frequency presence in synced Postgres) and **out-of-app push** (the email/notification path generalizes here). The per-project membership model designed now is what lets chat's channel permissions drop in cleanly.
-
----
 
 ---
 
