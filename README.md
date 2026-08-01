@@ -16,6 +16,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/ui-spec.md](docs/ui-spec.md) — screens, React Aria components, design tokens, board semantics
 - [docs/notifications.md](docs/notifications.md) — triggers, mention parsing, dedup, email outbox and retries
 - [docs/attachments.md](docs/attachments.md) — upload, authorized download, storage layout, orphan reclamation
+- [docs/roadmap-view.md](docs/roadmap-view.md) — Gantt task mapping, undated records, progress derivation, reschedule semantics, mobile behavior
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack
