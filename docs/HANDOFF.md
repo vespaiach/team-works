@@ -57,17 +57,13 @@ Flag this; don't silently code around it. `package.json` has only Next 14 / Reac
 
 ### ~~7. `docs/roadmap-view.md`~~ — done
 
-### 8. `docs/deployment.md`
-
-Runbook. Provisioning, nginx, Certbot, PM2/systemd, backups (Postgres + attachment disk), restore drill. Critically: the **schema migration procedure including how the `zero-cache` replica is handled** — a migration can require a replica reset.
+### ~~8. `docs/deployment.md`~~ — done
 
 ### ~~9. `docs/adr/`~~ — done
 
 ### ~~10. `docs/state-machines.md`~~ — done
 
-### 11. `docs/testing.md`
-
-Testing a Zero app: mutator unit tests, permission predicate tests, sync-scope tests, whether E2E runs against a real `zero-cache`.
+### ~~11. `docs/testing.md`~~ — done
 
 ### 12. `docs/non-functional.md`
 
@@ -81,4 +77,4 @@ Use the brainstorming skill. Ask **one question at a time**, multiple-choice whe
 
 Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time. `README.md` and `CLAUDE.md` now count as reconciliation targets too.
 
-Start with `docs/deployment.md`.
+Start with `docs/adr/`.

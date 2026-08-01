@@ -111,7 +111,7 @@ Reasoning: this is a single trusted internal team under 20 people, not a product
 
 ## 8. Testing
 
-Beyond the predicate and mutator tests permissions.md §10 and auth.md §12 already specify:
+Beyond the predicate and mutator tests permissions.md §10 and auth.md §12 already specify. See [testing.md](./testing.md) §7 for the runner and database strategy — everything below is integration-tier:
 
 - **Notification creation.** For each trigger in §1 — assignee change, comment create, mention appearing in a description or comment — assert the exact recipient set, and assert no row is created for the actor or for a deactivated candidate recipient.
 - **Dedup.** Assert the two partial unique indexes in §4 hold: mentioning the same person twice in one comment, or re-saving a description that already mentions someone, produces no duplicate row.
