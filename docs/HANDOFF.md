@@ -69,9 +69,7 @@ Runbook. Provisioning, nginx, Certbot, PM2/systemd, backups (Postgres + attachme
 
 One short ADR per settled decision in brief §7. Zero and frappe-gantt matter most; they're the ones you'd revisit.
 
-### 10. `docs/state-machines.md`
-
-Issue and project status transitions, legal moves, side effects (does closing a parent close sub-issues? do all-done issues complete a milestone?).
+### ~~10. `docs/state-machines.md`~~ — done
 
 ### 11. `docs/testing.md`
 
