@@ -24,13 +24,13 @@ npm run build
 npm run lint     # next lint
 ```
 
-There is no test runner configured yet. permissions.md §10, data-model.md and auth.md §12 specify what the first real feature work will need one for.
+There is no test runner configured yet — adding it is part of build step 1. [docs/testing.md](docs/testing.md) is the authority: Vitest for unit predicate tests and integration tests against a real `team_works_test` Postgres database, Playwright for a narrow E2E layer that runs against a real `zero-cache`. Will be `npm test` / `npm run test:unit` / `test:integration` / `test:e2e`.
 
 Three verifications are assigned to build step 1 and each already has its fallback decided: how Zero maps Postgres `date` (data-model.md §11), whether the self-referential composite FK survives a cascading project delete (§8 there), and whether Zero re-invokes its `auth` callback on token rejection (auth.md §5).
 
 ## Planned architecture
 
-None of this is installed — `package.json` has only Next 14, React and Tailwind. Adding it is part of build step 1: `drizzle-orm`, `drizzle-kit`, `pg`, `@rocicorp/zero`, `uuidv7`, `fractional-indexing`, plus `react-aria-components`, `@dnd-kit/core`, `frappe-gantt`, and `jose` + `nodemailer` for auth. **Not `next-auth`** — authentication is hand-written.
+None of this is installed — `package.json` has only Next 14, React and Tailwind. Adding it is part of build step 1: `drizzle-orm`, `drizzle-kit`, `pg`, `@rocicorp/zero`, `uuidv7`, `fractional-indexing`, plus `react-aria-components`, `@dnd-kit/core`, `frappe-gantt`, `jose` + `nodemailer` for auth, and `vitest` + `@playwright/test` for testing (docs/testing.md). **Not `next-auth`** — authentication is hand-written.
 
 - **Next.js App Router + React**, UI on **Adobe React Aria Components**, responsive from one codebase. `dnd-kit` for the board; `frappe-gantt` (core package, wrapped in a thin React component) for the roadmap.
 - **Zero (Rocicorp)** is the data layer, not a realtime add-on. Components read with `useQuery`/ZQL against a local store holding the whole workspace; writes go through custom mutators that run optimistically on the client and authoritatively on the server. There are no per-screen API endpoints and no TanStack Query. `zero-cache` runs as a Docker container on the same VPS, replicating from Postgres via logical replication.
