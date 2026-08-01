@@ -61,9 +61,7 @@ Flag this; don't silently code around it. `package.json` has only Next 14 / Reac
 
 Runbook. Provisioning, nginx, Certbot, PM2/systemd, backups (Postgres + attachment disk), restore drill. Critically: the **schema migration procedure including how the `zero-cache` replica is handled** — a migration can require a replica reset.
 
-### 9. `docs/adr/`
-
-One short ADR per settled decision in brief §7. Zero and frappe-gantt matter most; they're the ones you'd revisit.
+### ~~9. `docs/adr/`~~ — done
 
 ### ~~10. `docs/state-machines.md`~~ — done
 
