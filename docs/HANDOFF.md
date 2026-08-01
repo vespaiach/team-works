@@ -77,4 +77,4 @@ Use the brainstorming skill. Ask **one question at a time**, multiple-choice whe
 
 Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time. `README.md` and `CLAUDE.md` now count as reconciliation targets too.
 
-Start with `docs/adr/`.
+Start with `docs/non-functional.md`.
