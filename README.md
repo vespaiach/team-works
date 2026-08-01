@@ -13,6 +13,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/data-model.md](docs/data-model.md) — schema, sync boundary, invariants
 - [docs/auth.md](docs/auth.md) — invites, magic links, sessions, environment contract
 - [docs/local-dev.md](docs/local-dev.md) — local setup: Postgres, `zero-cache`, migrations, seed data
+- [docs/ui-spec.md](docs/ui-spec.md) — screens, React Aria components, design tokens, board semantics
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack
