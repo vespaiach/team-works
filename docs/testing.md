@@ -1,8 +1,8 @@
 # Team Works — testing
 
-_Testing spec for v1. Companion to [permissions.md](./permissions.md), [data-model.md](./data-model.md), [auth.md](./auth.md), [local-dev.md](./local-dev.md), [notifications.md](./notifications.md) and [attachments.md](./attachments.md). Status: approved 2026-07-31._
+_Testing spec for v1. Companion to [permissions.md](./permissions.md), [data-model.md](./data-model.md), [auth.md](./auth.md), [local-dev.md](./local-dev.md), [notifications.md](./notifications.md), [attachments.md](./attachments.md) and [roadmap-view.md](./roadmap-view.md). Status: approved 2026-07-31._
 
-Five of those documents already carry their own "Testing" section, written before this one existed, each ending in the same sentence: *"Beyond the predicate and mutator tests permissions.md §10 [and others] already specify."* Those sections stay — they are the authority on **what** to test for their domain — but none of them fix the runner, the database strategy, or which tier a given test belongs to. This document is that missing layer, and it answers the three questions [HANDOFF.md](./HANDOFF.md) left open for it: mutator unit tests, permission predicate tests, sync-scope tests, and whether E2E runs against a real `zero-cache`.
+Six of those documents already carry their own "Testing" section, written before this one existed, each ending in the same sentence: *"Beyond the predicate and mutator tests permissions.md §10 [and others] already specify."* Those sections stay — they are the authority on **what** to test for their domain — but none of them fix the runner, the database strategy, or which tier a given test belongs to. This document is that missing layer, and it answers the three questions [HANDOFF.md](./HANDOFF.md) left open for it: mutator unit tests, permission predicate tests, sync-scope tests, and whether E2E runs against a real `zero-cache`.
 
 There is no test runner in the repo yet — [CLAUDE.md](../CLAUDE.md) says so plainly. Everything below is a decision to be applied in build step 1, alongside the schema, Zero and auth work those other documents already assign there.
 
@@ -89,9 +89,9 @@ Three checks, all answerable from Postgres and the Zero schema's source alone, n
 
 ---
 
-## 7. Auth, notification and attachment tests (integration tier)
+## 7. Auth, notification, attachment and roadmap tests (integration tier)
 
-Already fully specified where they live — auth.md §12, notifications.md §8, attachments.md §7 — and nothing here repeats those lists. All of it runs in the integration tier, through the same `team_works_test` database and transaction harness as §5, with one adjustment: attachment tests point `ATTACHMENTS_DIR` at a fresh temp directory per test run (not the developer's `.data/attachments`), removed afterward, so upload and reclamation tests never touch a real dev workspace's files.
+Already fully specified where they live — auth.md §12, notifications.md §8, attachments.md §7, roadmap-view.md §8 — and nothing here repeats those lists. All of it runs in the integration tier, through the same `team_works_test` database and transaction harness as §5, with one adjustment: attachment tests point `ATTACHMENTS_DIR` at a fresh temp directory per test run (not the developer's `.data/attachments`), removed afterward, so upload and reclamation tests never touch a real dev workspace's files.
 
 ---
 
@@ -144,7 +144,7 @@ Two stages, not one, given the cost difference:
 
 - **CLAUDE.md** — the Commands section's "There is no test runner configured yet" now points to this document and names the two tools and the four scripts; the planned-architecture dependency note gains `vitest` and `@playwright/test`. (Not added to the curated doc list in "Project state" — that list already omits local-dev.md, ui-spec.md, notifications.md, attachments.md and state-machines.md, so this document follows the same precedent rather than becoming the exception.)
 - **local-dev.md §2** — gains the `team_works_test` database, created alongside `team_works_dev`. **§5** gains the second `db:migrate` run against it and the one-time `npx playwright install`.
-- **permissions.md §10, data-model.md §1/§8/§11, auth.md §12, notifications.md §8, attachments.md §7, state-machines.md §3** — each already specifies what to test (or, for state-machines.md, a claim worth testing); each now points to this document for the runner, the database strategy, and which tier its tests run in.
+- **permissions.md §10, data-model.md §1/§8/§11, auth.md §12, notifications.md §8, attachments.md §7, roadmap-view.md §8, state-machines.md §3** — each already specifies what to test (or, for state-machines.md, a claim worth testing); each now points to this document for the runner, the database strategy, and which tier its tests run in.
 - **README.md** — doc list and the Development section both gain a pointer to this document.
 - **HANDOFF.md** — item 11 struck.
 
