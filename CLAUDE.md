@@ -61,6 +61,8 @@ Decided, non-obvious, easy to violate — full detail in [docs/data-model.md](do
 
 **Never commit directly to `main`.** Create a feature branch for every change, including docs — `git checkout -b <branch> main` before touching files.
 
+**Open a pull request when a change is done.** Don't merge to `main` yourself — push the branch and open a PR for review.
+
 ## Conventions
 
 - `@/*` maps to `./src/*`; TypeScript strict. Tables/columns are `snake_case`, singular.
