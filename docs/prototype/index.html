@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#FBF6EC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#33261C}
+  button,input,textarea,select{font-family:inherit}
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-thumb{background:#D8C9AE;border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-track{background:transparent}
+  a{color:#B26B32;text-decoration:none}
+  a:hover{text-decoration:underline}
+  @keyframes tw-spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="--accent:{{ accent }};height:100vh;width:100%;overflow:hidden">
+
+<sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+  <div style="height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 100% at 50% 0%,#F7EEDD 0%,#EFE2CC 55%,#E7DAC0 100%);padding:24px">
+    <div style="width:min(420px,94vw);background:#FFFDF9;border:1px solid #E7DAC4;border-radius:18px;box-shadow:0 24px 60px rgba(60,38,15,.16);padding:36px 34px 30px">
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:26px">
+        <div style="width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ accent }};color:#FBF3E7">
+          <svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="2.5" width="6" height="6" rx="1.5"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.5"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.5"/></svg>
+        </div>
+        <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">Team Works</div>
+      </div>
+
+      <sc-if value="{{ auth.isForm }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <h1 style="font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px">Sign in</h1>
+          <p style="font-size:13.5px;line-height:1.55;color:#8B7A66;margin:0 0 22px">Enter your work email and we'll send you a magic link. No password required.</p>
+          <label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:7px">Email</label>
+          <input type="email" value="mara@teamworks.app" style="width:100%;padding:11px 13px;border:1px solid #E0D3BC;border-radius:10px;background:#FCF8EF;font-size:14px;color:#33261C;outline:none;margin-bottom:16px" style-focus="border-color:{{ accent }}">
+          <button onClick="{{ auth.send }}" style="width:100%;padding:11px;border:none;border-radius:10px;background:{{ accent }};color:#FBF3E7;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(80,45,15,.18)" style-hover="filter:brightness(1.05)">Send magic link</button>
+          <div style="font-size:12px;color:#A6957E;text-align:center;margin-top:18px">Invite-only workspace · fewer than 20 seats</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ auth.isSent }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:6px 0">
+          <div style="width:52px;height:52px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:{{ accent }}1e;color:{{ accent }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>
+          </div>
+          <h1 style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px">Check your email</h1>
+          <p style="font-size:13.5px;line-height:1.6;color:#8B7A66;margin:0 0 22px">We sent a sign-in link to <strong style="color:#5F503F">mara@teamworks.app</strong>. It expires in 15 minutes and can be used once.</p>
+          <button onClick="{{ auth.toVerify }}" style="width:100%;padding:10px;border:1px solid #E0D3BC;border-radius:10px;background:#FCF8EF;color:#5F503F;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="background:#F2E9D8">Open the link (demo)</button>
+          <div style="font-size:12px;color:#A6957E;margin-top:16px">Didn't get it? <a onClick="{{ auth.toForm }}" style="cursor:pointer">Resend</a></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ auth.isVerify }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:6px 0">
+          <span style="width:44px;height:44px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FBF3E7;background:{{ accent }}">MA</span>
+          <h1 style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px">Sign in to Team Works</h1>
+          <p style="font-size:13.5px;line-height:1.6;color:#8B7A66;margin:0 0 22px">You're signing in as <strong style="color:#5F503F">mara@teamworks.app</strong>. Confirm to continue.</p>
+          <button onClick="{{ auth.signIn }}" style="width:100%;padding:11px;border:none;border-radius:10px;background:{{ accent }};color:#FBF3E7;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(80,45,15,.18);margin-bottom:12px" style-hover="filter:brightness(1.05)">Sign in</button>
+          <div style="font-size:12px;color:#A6957E">This link opened a confirmation page — nothing is consumed until you click Sign in. <a onClick="{{ auth.toExpired }}" style="cursor:pointer">See expired state</a></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ auth.isExpired }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:6px 0">
+          <div style="width:52px;height:52px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:#C2492E1c;color:#C2492E">
+            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 15.6v.1"/></svg>
+          </div>
+          <h1 style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px">Link expired or already used</h1>
+          <p style="font-size:13.5px;line-height:1.6;color:#8B7A66;margin:0 0 22px">This sign-in link is no longer valid. Request a fresh one to continue.</p>
+          <button onClick="{{ auth.toForm }}" style="width:100%;padding:11px;border:none;border-radius:10px;background:{{ accent }};color:#FBF3E7;font-size:14px;font-weight:600;cursor:pointer" style-hover="filter:brightness(1.05)">Back to sign in</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;height:100vh;width:100%;overflow:hidden">
+
+  <aside style="width:262px;flex:none;display:flex;flex-direction:column;background:#EFE6D4;border-right:1px solid #E1D3B9;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 14px">
+      <div style="width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ accent }};color:#FBF3E7">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="2.5" width="6" height="6" rx="1.5"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.5"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.5"/></svg>
+      </div>
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:14px;letter-spacing:-.01em;line-height:1.15">Team Works</div>
+        <div style="font-size:11.5px;color:#9A8974;line-height:1.2">Team workspace</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 16 16" style="margin-left:auto;color:#A6957E" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6.5l4 3.5 4-3.5"/></svg>
+    </div>
+
+    <button onClick="{{ openIssueModal }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;margin-bottom:14px;border:none;border-radius:9px;background:{{ accent }};color:#FBF3E7;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(80,45,15,.18)" style-hover="filter:brightness(1.05)">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3.5v9M3.5 8h9"/></svg>
+      New issue
+    </button>
+
+    <div style="display:flex;align-items:center;padding:6px 10px 6px">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E">Projects</span>
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ openNew }}" title="New project" style="margin-left:auto;width:22px;height:22px;border:none;border-radius:6px;background:transparent;color:#B2A188;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#E3D7C0;color:#6E5D4D">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg>
+        </button>
+      </sc-if>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px;overflow:auto;max-height:44vh">
+      <sc-for list="{{ projectsNav }}" as="p" hint-placeholder-count="5">
+        <div onClick="{{ p.open }}" style="{{ p.rowStyle }}">
+          <span style="width:9px;height:9px;border-radius:3px;flex:none;background:{{ p.color }}"></span>
+          <span style="font-size:10.5px;font-weight:600;color:#B2A188;font-variant-numeric:tabular-nums;flex:none;width:30px">{{ p.key }}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</span>
+          <span style="margin-left:auto;font-size:11px;color:#A6957E">{{ p.count }}</span>
+        </div>
+      </sc-for>
+    </nav>
+
+    <div style="height:1px;background:#E1D3B9;margin:12px 4px 10px"></div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div onClick="{{ goRoadmap }}" style="{{ roadmapNavStyle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.6 4.2h7"/><path d="M5.2 8h8.2"/><path d="M2.6 11.8h5.4"/></svg>
+        Roadmap
+      </div>
+      <div onClick="{{ goNotifs }}" style="{{ notifNavStyle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.6a3.4 3.4 0 013.4 3.4c0 3.4 1.4 4.4 1.4 4.4H3.2s1.4-1 1.4-4.4A3.4 3.4 0 018 2.6zM6.6 13a1.4 1.4 0 002.8 0"/></svg>
+        Notifications
+        <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+          <span style="margin-left:auto;background:{{ accent }};color:#FBF3E7;font-size:11px;font-weight:600;padding:1px 7px;border-radius:9px">{{ notifUnread }}</span>
+        </sc-if>
+      </div>
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ goWorkspace }}" style="{{ wsNavStyle }}">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.3"/><path d="M8 1.6v2M8 12.4v2M1.6 8h2M12.4 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M12.5 3.5l-1.4 1.4M4.9 11.1l-1.4 1.4"/></svg>
+          Settings
+        </div>
+      </sc-if>
+    </nav>
+
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px;border-top:1px solid #E1D3B9;margin-top:12px;padding-top:12px">
+      <span style="width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:{{ accent }};color:#FBF3E7;font-size:11.5px;font-weight:600">MA</span>
+      <div style="min-width:0;line-height:1.2">
+        <div style="font-size:13px;font-weight:600">Mara Ellison</div>
+        <div style="font-size:11px;color:#9A8974">{{ roleLabel }}</div>
+      </div>
+      <button onClick="{{ signOut }}" title="Sign out" style="margin-left:auto;width:26px;height:26px;border:none;border-radius:7px;background:transparent;color:#A6957E;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#E3D7C0;color:#6E5D4D">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2.6H3.4A.8.8 0 002.6 3.4v9.2a.8.8 0 00.8.8H6M10.5 11l3-3-3-3M13.4 8H6"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;background:#FBF6EC">
+    <header style="flex:none;display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid #E7DAC4;background:#F6EEDF;min-height:58px">
+      <div style="flex:1;min-width:96px;display:flex;flex-direction:column;gap:1px">
+        <div style="display:flex;align-items:center;gap:9px;min-width:0">
+          <sc-if value="{{ header.hasDot }}" hint-placeholder-val="{{ true }}"><span style="width:11px;height:11px;border-radius:3px;flex:none;background:{{ header.dotColor }}"></span></sc-if>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ header.title }}</div>
+        </div>
+        <div style="font-size:12px;color:#9A8974;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ header.subtitle }}</div>
+      </div>
+
+      <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;display:flex;align-items:center;gap:7px">
+          <div style="display:flex;gap:2px;padding:3px;background:#EADFCB;border:1px solid #E0D3BC;border-radius:9px">
+            <div onClick="{{ group.setStatus }}" style="{{ group.statusStyle }}">Status</div>
+            <div onClick="{{ group.setAssignee }}" style="{{ group.assigneeStyle }}">Assignee</div>
+            <div onClick="{{ group.setPriority }}" style="{{ group.priorityStyle }}">Priority</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isRoadmap }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-left:6px;display:flex;gap:2px;padding:3px;background:#EADFCB;border:1px solid #E0D3BC;border-radius:9px">
+          <div onClick="{{ zoom.setMonth }}" style="{{ zoom.monthStyle }}">Month</div>
+          <div onClick="{{ zoom.setQuarter }}" style="{{ zoom.quarterStyle }}">Quarter</div>
+          <div onClick="{{ zoom.setYear }}" style="{{ zoom.yearStyle }}">Year</div>
+        </div>
+      </sc-if>
+
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+        <sc-if value="{{ isNotifs }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ markAllRead }}" style="display:inline-flex;align-items:center;gap:7px;padding:7px 12px;background:#FCF8EF;border:1px solid #E4D8C3;border-radius:9px;color:#5F503F;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F2E9D8">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5l3 3 5-6"/><path d="M8 11l5-6"/></svg>Mark all read
+          </button>
+        </sc-if>
+        <sc-if value="{{ showBoardTools }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:#FCF8EF;border:1px solid #E4D8C3;border-radius:9px;color:#A6957E;font-size:13px;width:190px">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.3"/><path d="M10.4 10.4L13.5 13.5"/></svg>Search issues
+          </div>
+        </sc-if>
+        <div style="display:flex;align-items:center">
+          <sc-for list="{{ team }}" as="m" hint-placeholder-count="4">
+            <span title="{{ m.name }}" style="width:28px;height:28px;border-radius:50%;margin-left:-8px;border:2px solid #F6EEDF;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#FBF3E7;background:{{ m.color }}">{{ m.initials }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </header>
+
+    <sc-if value="{{ banner.show }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;display:flex;align-items:center;gap:10px;padding:10px 22px;background:{{ banner.bg }};border-bottom:1px solid {{ banner.border }};color:{{ banner.color }};font-size:12.5px;font-weight:500">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="flex:none"><path d="M8 2.4l6 10.4H2z"/><path d="M8 6.6v3M8 11.4v.1"/></svg>
+        {{ banner.text }}
+      </div>
+    </sc-if>
+
+    <!-- BOARD -->
+    <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding:18px 22px 22px">
+        <div style="display:flex;gap:{{ colGap }};height:100%;align-items:flex-start;min-width:min-content">
+          <sc-for list="{{ columns }}" as="col" hint-placeholder-count="5">
+            <section style="width:{{ colWidth }}px;flex:none;display:flex;flex-direction:column;max-height:100%">
+              <div style="display:flex;align-items:center;gap:9px;padding:2px 4px 12px">
+                <sc-if value="{{ col.isAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#FBF3E7;background:{{ col.color }}">{{ col.initials }}</span></sc-if>
+                <sc-if value="{{ col.isDot }}" hint-placeholder-val="{{ true }}"><span style="width:10px;height:10px;border-radius:3px;flex:none;background:{{ col.color }}"></span></sc-if>
+                <span style="font-size:13.5px;font-weight:600">{{ col.name }}</span>
+                <span style="font-size:12px;color:#A6957E">{{ col.count }}</span>
+                <button onClick="{{ openIssueModal }}" style="margin-left:auto;width:22px;height:22px;border:none;border-radius:6px;background:transparent;color:#B2A188;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EDE2CF;color:#6E5D4D"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:{{ cardGap }};overflow-y:auto;padding:2px 2px 8px">
+                <sc-for list="{{ col.issues }}" as="issue" hint-placeholder-count="3">
+                  <article onClick="{{ issue.open }}" style="{{ issue.cardStyle }}" style-hover="border-color:#D9C7A9;box-shadow:0 4px 12px rgba(90,60,25,.10)">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                      <sc-if value="{{ issue.prio.urgent }}" hint-placeholder-val="{{ false }}"><span style="{{ issue.prio.urgentStyle }}"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#FBF3E7" stroke-width="2.2" stroke-linecap="round"><path d="M8 4v4.5M8 11.4v.1"/></svg></span></sc-if>
+                      <sc-if value="{{ issue.prio.showBars }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:flex-end;gap:2px;height:14px"><sc-for list="{{ issue.prio.bars }}" as="bar" hint-placeholder-count="3"><i style="{{ bar.style }}"></i></sc-for></span></sc-if>
+                      <span style="font-size:11.5px;color:#B2A188;font-weight:500;font-variant-numeric:tabular-nums">{{ issue.id }}</span>
+                      <sc-if value="{{ issue.showBadge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#8B7A66;font-weight:500"><span style="width:8px;height:8px;border-radius:3px;background:{{ issue.statusColor }}"></span>{{ issue.statusName }}</span></sc-if>
+                    </div>
+                    <div style="{{ issue.titleStyle }}">{{ issue.title }}</div>
+                    <sc-if value="{{ issue.hasLabels }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px">
+                        <sc-for list="{{ issue.labels }}" as="label" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:11px;font-weight:500;color:#6E5D4D"><span style="width:6px;height:6px;border-radius:50%;background:{{ label.color }}"></span>{{ label.name }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <span style="width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#FBF3E7;background:{{ issue.assigneeColor }}">{{ issue.assigneeInitials }}</span>
+                      <sc-if value="{{ issue.hasDue }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:{{ issue.dueColor }};font-weight:500"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.4" y="3" width="11.2" height="10.6" rx="2"/><path d="M2.4 6.2h11.2M5.5 1.8v2.4M10.5 1.8v2.4"/></svg>{{ issue.due }}</span></sc-if>
+                      <div style="margin-left:auto;display:flex;align-items:center;gap:11px;color:#B2A188;font-size:11.5px">
+                        <sc-if value="{{ issue.hasSub }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 3v6.5a2 2 0 002 2h6"/><rect x="9.5" y="8.5" width="4.5" height="4.5" rx="1"/></svg>{{ issue.subCount }}</span></sc-if>
+                        <sc-if value="{{ issue.hasComments }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.6 4a1.6 1.6 0 011.6-1.6h7.6A1.6 1.6 0 0113.4 4v5a1.6 1.6 0 01-1.6 1.6H6l-3 2.4V10.6H4.2A1.6 1.6 0 012.6 9z"/></svg>{{ issue.commentCount }}</span></sc-if>
+                      </div>
+                    </div>
+                  </article>
+                </sc-for>
+                <sc-if value="{{ col.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 6px;text-align:center;font-size:12px;color:#BCAB93">No issues</div></sc-if>
+              </div>
+            </section>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ISSUE DETAIL (full page) -->
+    <sc-if value="{{ isIssue }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto">
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 24px;border-bottom:1px solid #E7DAC4;background:#F6EEDF;position:sticky;top:0;z-index:5">
+          <span onClick="{{ det.openProject }}" style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#6E5D4D;font-weight:500;cursor:pointer"><span style="width:9px;height:9px;border-radius:3px;background:{{ det.projectColor }}"></span>{{ det.projectName }}</span>
+          <span style="color:#CBBBA2">/</span>
+          <span style="font-size:12.5px;color:#B2A188;font-weight:600;font-variant-numeric:tabular-nums">{{ det.id }}</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:2px">
+            <button title="Copy link" style="width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:#8B7A66;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EDE2CF"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 013.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 014.5 9l1-1"/></svg></button>
+            <button onClick="{{ det.back }}" title="Back to board" style="width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:#6E5D4D;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EDE2CF"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+          </div>
+        </div>
+
+        <div style="max-width:1080px;margin:0 auto;display:flex;gap:0;align-items:flex-start">
+          <div style="flex:1;min-width:0;padding:26px 30px 40px">
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:8px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:12.5px;font-weight:600;color:#5F503F"><span style="width:9px;height:9px;border-radius:3px;background:{{ det.statusColor }}"></span>{{ det.statusName }}</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:8px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:12.5px;font-weight:600;color:#5F503F">
+                <sc-if value="{{ det.prio.urgent }}" hint-placeholder-val="{{ false }}"><span style="{{ det.prio.urgentStyle }}"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#FBF3E7" stroke-width="2.2" stroke-linecap="round"><path d="M8 4v4.5M8 11.4v.1"/></svg></span></sc-if>
+                <sc-if value="{{ det.prio.showBars }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:flex-end;gap:2px;height:13px"><sc-for list="{{ det.prio.bars }}" as="bar" hint-placeholder-count="3"><i style="{{ bar.style }}"></i></sc-for></span></sc-if>{{ det.prioLabel }}
+              </span>
+            </div>
+            <h1 style="{{ det.titleStyle }}">{{ det.title }}</h1>
+            <p style="font-size:14px;line-height:1.68;color:#5F503F;margin:0 0 28px;text-wrap:pretty">{{ det.desc }}</p>
+
+            <sc-if value="{{ det.hasSubs }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-bottom:30px">
+                <div style="display:flex;align-items:center;gap:12px;margin:0 0 10px"><span style="font-size:13px;font-weight:600">Sub-issues</span><span style="font-size:12px;color:#A6957E">{{ det.subDone }}/{{ det.subTotal }}</span><div style="flex:1;height:5px;border-radius:3px;background:#EDE2CF;overflow:hidden"><div style="height:100%;width:{{ det.subPct }}%;background:{{ accent }}"></div></div></div>
+                <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:12px;overflow:hidden">
+                  <sc-for list="{{ det.subs }}" as="s" hint-placeholder-count="3">
+                    <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid #F1E7D5;cursor:pointer" style-hover="background:#FBF6EC">
+                      <span style="width:9px;height:9px;border-radius:3px;flex:none;background:{{ s.statusColor }}"></span>
+                      <span style="font-size:11.5px;color:#B2A188;font-weight:500;flex:none;font-variant-numeric:tabular-nums;width:52px">{{ s.id }}</span>
+                      <span style="flex:1;min-width:0;font-size:13.5px;{{ s.strike }}overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.title }}</span>
+                      <span style="width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#FBF3E7;background:{{ s.assigneeColor }}">{{ s.assigneeInitials }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="font-size:13px;font-weight:600;margin:0 0 14px;padding-top:24px;border-top:1px solid #EDE2CF">Comments</div>
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <sc-for list="{{ det.thread }}" as="c" hint-placeholder-count="3">
+                <div style="display:flex;gap:11px">
+                  <span style="width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#FBF3E7;background:{{ c.color }}">{{ c.initials }}</span>
+                  <div style="min-width:0;flex:1"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font-size:13px;font-weight:600">{{ c.name }}</span><span style="font-size:11.5px;color:#A6957E">{{ c.time }}</span></div><div style="font-size:13.5px;line-height:1.58;color:#5F503F;text-wrap:pretty">{{ c.body }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid #EDE2CF">
+              <span style="width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#FBF3E7;background:{{ accent }}">MA</span>
+              <div style="flex:1;min-width:0">
+                <div style="{{ det.composerStyle }}">{{ det.composerText }}</div>
+                <div style="font-size:11px;color:#B2A188;margin-top:6px">Type <strong style="color:#8B7A66">@</strong> to mention a teammate · plain text, no markdown</div>
+              </div>
+            </div>
+          </div>
+
+          <aside style="width:262px;flex:none;border-left:1px solid #EDE2CF;padding:24px 22px;display:flex;flex-direction:column;gap:17px;align-self:stretch">
+            <sc-for list="{{ det.meta }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E">{{ f.label }}</span>
+                <span style="{{ f.valStyle }}">
+                  <sc-if value="{{ f.hasSwatch }}" hint-placeholder-val="{{ false }}"><span style="{{ f.swatchStyle }}"></span></sc-if>
+                  <sc-if value="{{ f.hasAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;color:#FBF3E7;background:{{ f.avatarColor }}">{{ f.avatarInitials }}</span></sc-if>
+                  {{ f.value }}
+                </span>
+              </div>
+            </sc-for>
+            <div style="height:1px;background:#EDE2CF"></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E">Attachments</span><div style="border:1.5px dashed #DCCDB2;border-radius:10px;padding:14px;text-align:center;font-size:12px;color:#A6957E">Drop files or <span style="color:{{ accent }};font-weight:600">browse</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E">Created</span><span style="font-size:12.5px;color:#8B7A66">{{ det.created }} · by {{ det.createdBy }}</span></div>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ROADMAP -->
+    <sc-if value="{{ isRoadmap }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow:auto;padding:20px 22px 24px">
+        <div style="min-width:860px;background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(90,60,25,.05)">
+          <div style="display:flex;border-bottom:1px solid #EDE2CF">
+            <div style="width:230px;flex:none;padding:12px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E;border-right:1px solid #EDE2CF">Project</div>
+            <div style="flex:1;display:flex">
+              <sc-for list="{{ roadmap.cols }}" as="c" hint-placeholder-count="6"><div style="flex:1;padding:12px 0;text-align:center;font-size:12px;font-weight:600;color:#8B7A66;border-right:1px solid #F1E7D5">{{ c }}</div></sc-for>
+            </div>
+          </div>
+          <sc-for list="{{ roadmap.rows }}" as="row" hint-placeholder-count="5">
+            <div style="{{ row.wrapStyle }}">
+              <div style="width:230px;flex:none;padding:0 18px;border-right:1px solid #EDE2CF;display:flex;align-items:center;gap:10px">
+                <sc-if value="{{ row.isMilestone }}" hint-placeholder-val="{{ false }}"><span style="width:10px;height:10px;flex:none;background:#8B7A66;transform:rotate(45deg);border-radius:2px;margin-left:8px"></span></sc-if>
+                <sc-if value="{{ row.isProject }}" hint-placeholder-val="{{ true }}"><span style="width:10px;height:10px;border-radius:3px;flex:none;background:{{ row.color }}"></span></sc-if>
+                <div style="min-width:0"><div style="{{ row.nameStyle }}">{{ row.name }}</div><sc-if value="{{ row.isProject }}" hint-placeholder-val="{{ true }}"><div style="font-size:11px;color:#A6957E">{{ row.sub }}</div></sc-if></div>
+              </div>
+              <div style="flex:1;position:relative;min-height:{{ row.rowH }}">
+                <div style="position:absolute;inset:0;display:flex"><sc-for list="{{ roadmap.cols }}" as="mm" hint-placeholder-count="6"><div style="flex:1;border-right:1px solid #F5EDDD"></div></sc-for></div>
+                <sc-if value="{{ row.isProject }}" hint-placeholder-val="{{ true }}">
+                  <div style="{{ row.barStyle }}">
+                    <div style="{{ row.fillStyle }}"></div>
+                    <span style="position:relative;z-index:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.barLabel }}</span>
+                    <span style="position:relative;z-index:1;margin-left:auto;font-variant-numeric:tabular-nums;font-size:10.5px;opacity:.92">{{ row.pct }}%</span>
+                    <sc-if value="{{ row.canDrag }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:3px;top:0;bottom:0;width:6px;cursor:ew-resize"></span></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ row.isMilestone }}" hint-placeholder-val="{{ false }}"><span style="{{ row.markerStyle }}"></span></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex"><div style="width:230px;flex:none;border-right:1px solid #EDE2CF"></div><div style="flex:1;position:relative;height:12px"><div style="{{ roadmap.todayStyle }}"></div></div></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:18px;padding:14px 4px 0;font-size:12px;color:#8B7A66">
+          <span style="display:inline-flex;align-items:center;gap:7px"><span style="width:22px;height:8px;border-radius:3px;background:{{ accent }}"></span>Progress</span>
+          <span style="display:inline-flex;align-items:center;gap:7px"><span style="width:11px;height:11px;background:#8B7A66;transform:rotate(45deg);border-radius:2px"></span>Milestone</span>
+          <span style="display:inline-flex;align-items:center;gap:7px"><span style="width:2px;height:14px;background:#C2492E"></span>Today</span>
+          <span style="margin-left:auto;color:#A6957E">{{ roadmap.dragNote }}</span>
+        </div>
+
+        <sc-if value="{{ roadmap.hasUndated }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:26px;background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;overflow:hidden">
+            <div style="padding:13px 18px;border-bottom:1px solid #EDE2CF;display:flex;align-items:center;gap:9px"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#A6957E" stroke-width="1.6"><circle cx="8" cy="8" r="5.6"/><path d="M8 5v3.2l2 1.2"/></svg><span style="font-size:13px;font-weight:600">Undated</span><span style="font-size:11.5px;color:#A6957E">Needs dates to appear on the chart</span></div>
+            <sc-for list="{{ roadmap.undated }}" as="u" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #F1E7D5">
+                <sc-if value="{{ u.isMilestone }}" hint-placeholder-val="{{ false }}"><span style="width:9px;height:9px;flex:none;background:#8B7A66;transform:rotate(45deg);border-radius:2px;margin-left:14px"></span></sc-if>
+                <sc-if value="{{ u.isProject }}" hint-placeholder-val="{{ true }}"><span style="width:10px;height:10px;border-radius:3px;flex:none;background:{{ u.color }}"></span></sc-if>
+                <span style="font-size:13.5px;font-weight:{{ u.weight }};min-width:190px">{{ u.name }}</span>
+                <span style="font-size:12.5px;color:#A6957E">{{ u.missing }}</span>
+                <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><span style="margin-left:auto;font-size:12px;color:{{ accent }};font-weight:600;cursor:pointer">Set dates</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- NOTIFICATIONS -->
+    <sc-if value="{{ isNotifs }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto">
+        <sc-if value="{{ notifsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#B2A188;gap:12px"><svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 2.6a3.4 3.4 0 013.4 3.4c0 3.4 1.4 4.4 1.4 4.4H3.2s1.4-1 1.4-4.4A3.4 3.4 0 018 2.6z"/></svg><span style="font-size:14px">No notifications yet</span></div>
+        </sc-if>
+        <sc-if value="{{ notifsHas }}" hint-placeholder-val="{{ true }}">
+          <div style="max-width:760px;margin:0 auto;padding:14px 22px 34px">
+            <sc-for list="{{ notifs }}" as="n" hint-placeholder-count="6">
+              <div onClick="{{ n.open }}" style="{{ n.rowStyle }}" style-hover="background:#FBF6EC">
+                <span style="width:8px;height:8px;border-radius:50%;flex:none;margin-top:9px;background:{{ n.dotColor }}"></span>
+                <sc-if value="{{ n.hasActor }}" hint-placeholder-val="{{ true }}"><span style="width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#FBF3E7;background:{{ n.actorColor }}">{{ n.actorInitials }}</span></sc-if>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;line-height:1.5;color:#33261C;text-wrap:pretty"><strong style="font-weight:{{ n.weight }}">{{ n.actorName }}</strong> <span style="color:#8B7A66">{{ n.action }}</span> <strong style="font-weight:{{ n.weight }}">{{ n.issueId }}</strong></div>
+                  <div style="font-size:13px;color:#8B7A66;line-height:1.45;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ n.issueTitle }}</div>
+                  <div style="display:flex;align-items:center;gap:7px;margin-top:6px"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#8B7A66"><span style="width:7px;height:7px;border-radius:2px;background:{{ n.projectColor }}"></span>{{ n.project }}</span><span style="width:3px;height:3px;border-radius:50%;background:#CBBBA2"></span><span style="font-size:11px;color:#A6957E">{{ n.time }}</span></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- PROJECT SETTINGS -->
+    <sc-if value="{{ isProjectSettings }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:26px 30px 40px">
+        <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:26px">
+          <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;padding:22px 24px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:18px">Details</div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Name</label><input value="{{ ps.name }}" style="{{ ps.inputStyle }}"></div>
+              <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Description</label><textarea rows="2" style="{{ ps.inputStyle }}">{{ ps.desc }}</textarea></div>
+              <div style="display:flex;gap:14px">
+                <div style="flex:1"><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Start date</label><input value="{{ ps.start }}" style="{{ ps.inputStyle }}"></div>
+                <div style="flex:1"><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Target date</label><input value="{{ ps.target }}" style="{{ ps.inputStyle }}"></div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-end">
+                <div style="flex:1"><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Lead</label><div style="{{ ps.pickStyle }}"><span style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#FBF3E7;background:{{ ps.leadColor }}">{{ ps.leadInitials }}</span>{{ ps.leadName }}</div></div>
+                <div style="flex:1"><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:6px">Status</label><div style="{{ ps.pickStyle }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ ps.statusColor }}"></span>{{ ps.statusName }}</div></div>
+              </div>
+              <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A6957E;margin-bottom:8px">Color</label><div style="display:flex;gap:10px"><sc-for list="{{ ps.swatches }}" as="sw" hint-placeholder-count="6"><div style="{{ sw.style }}"></div></sc-for></div></div>
+            </div>
+          </div>
+
+          <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;padding:22px 24px">
+            <div style="display:flex;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:600">Members</span><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:{{ accent }};font-weight:600;cursor:pointer"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg>Add member</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ ps.members }}" as="m" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:9px" style-hover="background:#FBF6EC"><span style="width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#FBF3E7;background:{{ m.color }}">{{ m.initials }}</span><div style="min-width:0"><div style="font-size:13px;font-weight:500">{{ m.name }}</div><div style="font-size:11px;color:#A6957E">{{ m.email }}</div></div><span style="margin-left:auto;font-size:11.5px;color:#B2A188;cursor:pointer" style-hover="color:#C2492E">Remove</span></div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;padding:22px 24px">
+            <div style="display:flex;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:600">Milestones</span><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:{{ accent }};font-weight:600;cursor:pointer"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg>New milestone</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ ps.milestones }}" as="ms" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:9px" style-hover="background:#FBF6EC"><span style="width:9px;height:9px;flex:none;background:#8B7A66;transform:rotate(45deg);border-radius:2px"></span><span style="flex:1;min-width:0;font-size:13px;font-weight:500">{{ ms.name }}</span><span style="font-size:12px;color:#A6957E">{{ ms.target }}</span><span style="font-size:11.5px;color:#B2A188;cursor:pointer" style-hover="color:#6E5D4D">Edit</span></div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;padding:20px 24px">
+            <div style="display:flex;align-items:center;gap:16px"><div style="min-width:0"><div style="font-size:13.5px;font-weight:600;color:#C2492E">Delete project</div><div style="font-size:12px;color:#8B7A66;margin-top:3px">{{ ps.deleteNote }}</div></div><button style="{{ ps.deleteBtnStyle }}">Delete</button></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- WORKSPACE SETTINGS -->
+    <sc-if value="{{ isWorkspace }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:0 0 40px">
+        <div style="display:flex;gap:4px;padding:12px 26px 0;border-bottom:1px solid #E7DAC4;background:#F6EEDF">
+          <div onClick="{{ ws.tabMembers }}" style="{{ ws.membersTab }}">Members</div>
+          <div onClick="{{ ws.tabInvites }}" style="{{ ws.invitesTab }}">Pending invites</div>
+          <div onClick="{{ ws.tabLabels }}" style="{{ ws.labelsTab }}">Labels</div>
+        </div>
+        <div style="max-width:760px;margin:0 auto;padding:26px 30px">
+          <sc-if value="{{ ws.isMembers }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;margin-bottom:16px"><span style="font-size:15px;font-weight:600">Members</span><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;background:{{ accent }};color:#FBF3E7;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg>Invite by email</span></div>
+            <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;overflow:hidden">
+              <sc-for list="{{ ws.members }}" as="m" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #F1E7D5"><span style="width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#FBF3E7;background:{{ m.color }}">{{ m.initials }}</span><div style="min-width:0"><div style="font-size:13.5px;font-weight:500">{{ m.name }}</div><div style="font-size:11.5px;color:#A6957E">{{ m.email }}</div></div><span style="{{ m.roleStyle }}">{{ m.role }}</span><span style="font-size:11.5px;color:#B2A188;cursor:pointer;width:74px;text-align:right" style-hover="color:#C2492E">{{ m.actionLabel }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ ws.isInvites }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:15px;font-weight:600;margin-bottom:16px">Pending invites</div>
+            <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;overflow:hidden">
+              <sc-for list="{{ ws.invites }}" as="i" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #F1E7D5"><span style="width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:#EFE4D2;color:#A6957E"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="11" height="8" rx="1.5"/><path d="M3 5l5 3.4L13 5"/></svg></span><div style="min-width:0;flex:1"><div style="font-size:13.5px;font-weight:500">{{ i.email }}</div><div style="font-size:11.5px;color:#A6957E">Invited as {{ i.role }} · expires {{ i.expires }}</div></div><span style="font-size:11.5px;color:{{ accent }};font-weight:600;cursor:pointer">Resend</span><span style="font-size:11.5px;color:#B2A188;cursor:pointer" style-hover="color:#C2492E">Revoke</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ ws.isLabels }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;margin-bottom:16px"><span style="font-size:15px;font-weight:600">Labels</span><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:{{ accent }};font-weight:600;cursor:pointer"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3.5v9M3.5 8h9"/></svg>New label</span></div>
+            <div style="background:#FFFDF9;border:1px solid #ECE1CF;border-radius:14px;overflow:hidden">
+              <sc-for list="{{ ws.labels }}" as="l" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #F1E7D5"><span style="width:12px;height:12px;border-radius:50%;flex:none;background:{{ l.color }}"></span><span style="flex:1;font-size:13.5px;font-weight:500">{{ l.name }}</span><span style="font-size:11.5px;color:#B2A188;cursor:pointer" style-hover="color:#6E5D4D">Edit</span><span style="font-size:11.5px;color:#B2A188;cursor:pointer" style-hover="color:#C2492E">Delete</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</sc-if>
+
+<!-- LOADING (first sync) -->
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:#FBF6EC">
+    <div style="width:38px;height:38px;border-radius:50%;border:3px solid #E7DAC4;border-top-color:{{ accent }};animation:tw-spin .8s linear infinite"></div>
+    <div style="font-size:13.5px;color:#8B7A66">Syncing your workspace…</div>
+  </div>
+</sc-if>
+
+<!-- NEW ISSUE MODAL -->
+<sc-if value="{{ issueModalOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:70;display:flex;align-items:flex-start;justify-content:center;padding:64px 20px">
+    <div onClick="{{ closeIssueModal }}" style="position:absolute;inset:0;background:rgba(42,26,12,.34)"></div>
+    <section style="position:relative;width:min(600px,96vw);background:#FCF8EF;border:1px solid #E0D3BC;border-radius:16px;box-shadow:0 24px 64px rgba(60,38,15,.30);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid #EDE2CF"><span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border-radius:7px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:12px;font-weight:600;color:#5F503F"><span style="width:8px;height:8px;border-radius:3px;background:{{ curProjectColor }}"></span>{{ curProjectName }}</span><span style="color:#CBBBA2">›</span><span style="font-size:13px;font-weight:600;color:#6E5D4D">New issue</span><button onClick="{{ closeIssueModal }}" style="margin-left:auto;width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:#6E5D4D;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EDE2CF"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div style="padding:20px 22px 6px">
+        <input type="text" placeholder="Issue title" style="width:100%;border:none;background:transparent;outline:none;font-size:20px;font-weight:700;letter-spacing:-.02em;color:#33261C;padding:0 0 10px">
+        <textarea placeholder="Add a description…" rows="3" style="width:100%;border:none;background:transparent;outline:none;resize:none;font-size:14px;line-height:1.65;color:#5F503F;padding:0"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px">
+          <button onClick="{{ composer.cycleStatus }}" style="display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:9px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#EFE4D2"><span style="width:9px;height:9px;border-radius:3px;background:{{ composer.statusColor }}"></span>{{ composer.statusLabel }}</button>
+          <button onClick="{{ composer.cyclePrio }}" style="display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:9px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#EFE4D2"><sc-if value="{{ composer.prio.urgent }}" hint-placeholder-val="{{ false }}"><span style="{{ composer.prio.urgentStyle }}"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#FBF3E7" stroke-width="2.2" stroke-linecap="round"><path d="M8 4v4.5M8 11.4v.1"/></svg></span></sc-if><sc-if value="{{ composer.prio.showBars }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:flex-end;gap:2px;height:13px"><sc-for list="{{ composer.prio.bars }}" as="bar" hint-placeholder-count="3"><i style="{{ bar.style }}"></i></sc-for></span></sc-if>{{ composer.prioLabel }}</button>
+          <button style="display:inline-flex;align-items:center;gap:7px;padding:6px 11px 6px 7px;border-radius:9px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#EFE4D2"><sc-if value="{{ composer.hasAssignee }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#FBF3E7;background:{{ composer.assigneeColor }}">{{ composer.assigneeInitials }}</span></sc-if><sc-if value="{{ composer.noAssignee }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#A6957E" stroke-width="1.4" stroke-dasharray="2.4 2"><circle cx="8" cy="5.4" r="2.6"/><path d="M3 13.4c0-2.4 2.2-3.8 5-3.8s5 1.4 5 3.8"/></svg></sc-if>{{ composer.assigneeName }}</button>
+          <button style="display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:9px;background:#F4ECDD;border:1px solid #E7DAC4;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#EFE4D2"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#A6957E" stroke-width="1.5"><path d="M7.2 2.4H3.2A.8.8 0 002.4 3.2v4l6 6a1.1 1.1 0 001.6 0l3.4-3.4a1.1 1.1 0 000-1.6l-6-6z"/><circle cx="5.2" cy="5.2" r=".9" fill="#A6957E"/></svg>Label</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding:14px 0 4px"><span style="font-size:11px;color:#A6957E;align-self:center;margin-right:2px">Assign:</span><sc-for list="{{ composer.assigneeOpts }}" as="m" hint-placeholder-count="5"><button onClick="{{ m.pick }}" style="display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border-radius:20px;background:#FCF8EF;border:1px solid #E7DAC4;font-size:12px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#F2E9D8"><span style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#FBF3E7;background:{{ m.color }}">{{ m.initials }}</span>{{ m.name }}</button></sc-for></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid #EDE2CF;background:#F6EEDF"><div style="margin-left:auto;display:flex;gap:8px"><button onClick="{{ closeIssueModal }}" style="padding:8px 15px;border-radius:9px;border:1px solid #E0D3BC;background:#FCF8EF;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#F2E9D8">Cancel</button><button onClick="{{ closeIssueModal }}" style="padding:8px 17px;border-radius:9px;border:none;background:{{ accent }};font-size:13px;font-weight:600;color:#FBF3E7;cursor:pointer;box-shadow:0 1px 2px rgba(80,45,15,.18)" style-hover="filter:brightness(1.05)">Create issue</button></div></div>
+    </section>
+  </div>
+</sc-if>
+
+<!-- NEW PROJECT MODAL -->
+<sc-if value="{{ newOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:70;display:flex;align-items:flex-start;justify-content:center;padding:64px 20px">
+    <div onClick="{{ closeNew }}" style="position:absolute;inset:0;background:rgba(42,26,12,.34)"></div>
+    <section style="position:relative;width:min(560px,96vw);background:#FCF8EF;border:1px solid #E0D3BC;border-radius:16px;box-shadow:0 24px 64px rgba(60,38,15,.30);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid #EDE2CF"><span style="width:26px;height:26px;border-radius:8px;flex:none;background:{{ newColor }}"></span><span style="font-size:14px;font-weight:600">New project</span><button onClick="{{ closeNew }}" style="margin-left:auto;width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:#6E5D4D;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EDE2CF"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div style="padding:20px 22px 8px">
+        <div style="display:flex;gap:12px;margin-bottom:8px"><input type="text" placeholder="Project name" style="flex:1;border:none;background:transparent;outline:none;font-size:21px;font-weight:700;letter-spacing:-.02em;color:#33261C;padding:0"><input type="text" placeholder="KEY" maxlength="6" style="width:74px;border:1px solid #E0D3BC;border-radius:8px;background:#FFFDF9;outline:none;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8B7A66;padding:0 10px;text-align:center"></div>
+        <textarea placeholder="Add a short description…" rows="2" style="width:100%;border:none;background:transparent;outline:none;resize:none;font-size:14px;line-height:1.6;color:#5F503F;padding:0"></textarea>
+        <div style="display:flex;align-items:center;gap:14px;padding:18px 0 4px;margin-top:14px;border-top:1px solid #EDE2CF"><span style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6957E;flex:none">Color</span><div style="display:flex;gap:10px"><sc-for list="{{ newSwatches }}" as="sw" hint-placeholder-count="6"><div onClick="{{ sw.pick }}" style="{{ sw.style }}"></div></sc-for></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid #EDE2CF;background:#F6EEDF"><span style="font-size:12px;color:#A6957E;display:inline-flex;align-items:center;gap:7px"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3.5v9M3.5 8h9"/></svg>Invite members after creating</span><div style="margin-left:auto;display:flex;gap:8px"><button onClick="{{ closeNew }}" style="padding:8px 15px;border-radius:9px;border:1px solid #E0D3BC;background:#FCF8EF;font-size:13px;font-weight:500;color:#5F503F;cursor:pointer" style-hover="background:#F2E9D8">Cancel</button><button onClick="{{ closeNew }}" style="padding:8px 17px;border-radius:9px;border:none;background:{{ accent }};font-size:13px;font-weight:600;color:#FBF3E7;cursor:pointer;box-shadow:0 1px 2px rgba(80,45,15,.18)" style-hover="filter:brightness(1.05)">Create project</button></div></div>
+    </section>
+  </div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:860},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#B26B32&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#B26B32&quot;,&quot;#A9803F&quot;,&quot;#8C5A3B&quot;,&quot;#C08748&quot;],&quot;section&quot;:&quot;Theme&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;viewerRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;admin&quot;,&quot;options&quot;:[&quot;admin&quot;,&quot;member&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Permissions&quot;},&quot;connection&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;online&quot;,&quot;options&quot;:[&quot;online&quot;,&quot;offline&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Permissions&quot;},&quot;appState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;ready&quot;,&quot;options&quot;:[&quot;ready&quot;,&quot;loading&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { view:'board', projectKey:'WEB', issueId:'WEB-31', groupBy:'status', notifRead:{}, wsTab:'members', authState:'form', zoom:'quarter', issueModalOpen:false, newOpen:false, newColor:null, cStatus:'backlog', cPrio:'medium', cAssignee:null };
+
+  renderVals(){
+    const accent = this.props.accent || '#B26B32';
+    const compact = (this.props.density||'comfortable')==='compact';
+    const isAdmin = (this.props.viewerRole||'admin')==='admin';
+    const offline = (this.props.connection||'online')==='offline';
+    const isLoading = (this.props.appState||'ready')==='loading';
+    const view = this.state.view;
+    const white='#FBF3E7';
+
+    const S = { backlog:'#B0A08B', todo:'#808A98', in_progress:'#4E6E8C', done:'#6E8B6A', canceled:'#C2492E' };
+    const Sname = { backlog:'Backlog', todo:'Todo', in_progress:'In Progress', done:'Done', canceled:'Canceled' };
+    const statuses = ['backlog','todo','in_progress','done','canceled'];
+    const P = { none:'#B0A08B', low:'#7E9BB5', medium:'#C08A3E', high:'#C4763C', urgent:'#C2492E' };
+    const Pname = { none:'No priority', low:'Low', medium:'Medium', high:'High', urgent:'Urgent' };
+
+    const team = [
+      { name:'Mara Ellison', initials:'MA', color:accent, email:'mara@teamworks.app', role:'admin' },
+      { name:'Devon Park', initials:'DP', color:'#6E8B6A', email:'devon@teamworks.app', role:'member' },
+      { name:'Priya Rao', initials:'PR', color:'#8C5A3B', email:'priya@teamworks.app', role:'member' },
+      { name:'Leo Nguyen', initials:'LN', color:'#4E6E8C', email:'leo@teamworks.app', role:'member' },
+      { name:'Sana Farah', initials:'SF', color:'#A65E4E', email:'sana@teamworks.app', role:'member' },
+    ];
+    const M={}; team.forEach(m=>M[m.initials]=m);
+    const L = {
+      design:{name:'design',color:'#B26B32'}, bug:{name:'bug',color:'#A65E4E'}, content:{name:'content',color:'#6E8B6A'},
+      research:{name:'research',color:'#7A6E58'}, infra:{name:'infra',color:'#4E6E8C'}, a11y:{name:'a11y',color:'#8C6BB0'},
+    };
+
+    const projects = [
+      { key:'WEB', name:'Website Redesign', color:accent, status:'active', lead:'MA', start:'Jun 2', target:'Oct 15', members:['MA','PR','DP','LN','SF'], barL:8, barW:52, done:3, total:13, canceled:1, ms:[{name:'Discovery',at:22},{name:'Board MVP',at:52},{name:'Launch',at:null}] },
+      { key:'MOB', name:'Mobile App v2', color:'#6E8B6A', status:'active', lead:'DP', start:'Jul 1', target:'Dec 5', members:['DP','SF','LN'], barL:24, barW:60, done:2, total:9, canceled:0, ms:[{name:'Beta',at:58},{name:'Store submit',at:95}] },
+      { key:'BRD', name:'Brand Refresh', color:'#8C5A3B', status:'planned', lead:'PR', start:'Aug 1', target:'Sep 20', members:['PR','MA'], done:1, total:5, canceled:0, barL:22, barW:32, ms:[{name:'Guidelines',at:null}] },
+      { key:'SEO', name:'SEO Campaign', color:'#4E6E8C', status:'active', lead:'LN', start:'Jul 20', target:'Oct 1', members:['LN','PR'], done:2, total:6, canceled:0, barL:36, barW:36, ms:[] },
+      { key:'OPS', name:'Ops & Roadmap', color:'#7A6E58', status:'paused', lead:'MA', start:null, target:'Nov 1', members:['MA','DP'], done:0, total:4, canceled:0, ms:[] },
+    ];
+    const PK={}; projects.forEach(p=>PK[p.key]=p);
+    const memberKeys = isAdmin ? projects.map(p=>p.key) : ['WEB','MOB'];
+    const isMemberOf = k => memberKeys.includes(k);
+    const cur = PK[this.state.projectKey] || projects[0];
+
+    const heights=[7,10,13];
+    const prioGlyph = (key)=>{
+      const lv={none:0,low:1,medium:2,high:3,urgent:4}[key];
+      if(lv===4) return { urgent:true, showBars:false, bars:[], urgentStyle:`width:15px;height:15px;flex:none;border-radius:4px;background:${P.urgent};display:flex;align-items:center;justify-content:center` };
+      const filled=Math.min(lv,3);
+      return { urgent:false, showBars:true, bars:heights.map((h,i)=>({ style:`width:3px;border-radius:1px;flex:none;height:${h}px;background:${i<filled?P[key]:'#DBCFB9'}` })), urgentStyle:'' };
+    };
+
+    // ---- Issue data ----
+    const richThread = [
+      { who:'DP', t:'2d', body:'Pulled dnd-kit in — sensor setup is straightforward. The tricky part is persisting sort_order without reindexing the whole column.' },
+      { who:'MA', t:'1d', body:'Let\u2019s use fractional indexing so a drop only writes the moved card — one replicated row instead of N.' },
+      { who:'LN', t:'6h', body:'The optimistic move also has to set status when the card crosses columns, per the board grouping rule. I\u2019ll fold both into moveIssue.' },
+      { who:'PR', t:'2h', body:'Design signed off on the drop shadow and placeholder gap. Ship it.' },
+    ];
+    const rawByProject = {
+      WEB: [
+        { num:42, title:'Define brand tone guidelines for the new site', status:'backlog', priority:'medium', assignee:'PR', labels:['design'], due:'Aug 2', subCount:2, commentCount:1, milestone:'Discovery' },
+        { num:45, title:'Audit legacy blog content for migration', status:'backlog', priority:'low', assignee:'PR', labels:['content'], commentCount:3, milestone:'Discovery' },
+        { num:51, title:'Research sync conflict UX patterns', status:'backlog', priority:'none', assignee:'LN', labels:['research'] },
+        { num:38, title:'Rework homepage hero layout and motion', status:'todo', priority:'high', assignee:'MA', labels:['design'], due:'Aug 18', subCount:3, commentCount:4, milestone:'Board MVP' },
+        { num:40, title:'Set up staging deploy on the VPS', status:'todo', priority:'medium', assignee:'DP', labels:['infra'], due:'Aug 15' },
+        { num:47, title:'Write copy for the services page', status:'todo', priority:'low', assignee:'PR', labels:['content'], commentCount:2 },
+        { num:31, title:'Build Kanban board drag-and-drop', status:'in_progress', priority:'urgent', assignee:'MA', labels:['design'], due:'Aug 12', dueSoon:true, subCount:4, commentCount:4, milestone:'Board MVP',
+          desc:'Cards drag between status columns and reorder within a column. Use dnd-kit sensors, and persist both status and sort_order through a single moveIssue mutator so the move is optimistic on the client and reconciled on the server.',
+          thread:richThread,
+          subs:[
+            { num:52, title:'Set up the column data model', status:'done', assignee:'DP' },
+            { num:53, title:'Wire drag sensors with dnd-kit', status:'done', assignee:'MA' },
+            { num:54, title:'Persist sort_order on drop', status:'in_progress', assignee:'LN' },
+            { num:55, title:'Empty-column drop zones', status:'todo', assignee:'MA' },
+          ] },
+        { num:34, title:'Fix avatar upload failing on mobile', status:'in_progress', priority:'high', assignee:'SF', labels:['bug'], due:'Jul 11', overdue:true, commentCount:2 },
+        { num:36, title:'Implement per-project write rules in mutators', status:'in_progress', priority:'high', assignee:'LN', labels:['infra'], subCount:2 },
+        { num:22, title:'Ship email magic-link authentication', status:'done', priority:'medium', assignee:'DP', labels:['infra'], commentCount:3 },
+        { num:27, title:'Finalize the logo lockup and favicon', status:'done', priority:'medium', assignee:'PR', labels:['design'] },
+        { num:19, title:'Migrate schema to Drizzle', status:'done', priority:'low', assignee:'LN', labels:['infra'] },
+        { num:15, title:'Drop the standalone marketing microsite', status:'canceled', priority:'none', assignee:'MA', labels:['content'] },
+      ],
+    };
+    const genFor = (key) => {
+      const p = PK[key]; const mem = p.members;
+      const seed = key.charCodeAt(0);
+      const titles = ['Set up project foundations','Draft scope and milestones','Collect references and audit','Wire the first synced query','Review with the team','Polish empty and error states'];
+      const sts = ['backlog','todo','in_progress','in_progress','done','todo'];
+      const pr = ['medium','high','urgent','low','medium','none'];
+      return titles.map((t,i)=>({ num: 10+i, title:t, status:sts[i], priority:pr[i], assignee: mem[(i+seed)%mem.length], labels: i%2? ['infra'] : ['design'], commentCount: i%3, subCount: i===2?2:0, due: i===2?'Aug 9':undefined }));
+    };
+    const rawIssues = (rawByProject[cur.key] || genFor(cur.key));
+
+    const mk = (o, pkey) => {
+      const p = PK[pkey||cur.key];
+      const canceled = o.status==='canceled';
+      const a = o.assignee?M[o.assignee]:null;
+      let dueColor='#8B7A66'; if(o.overdue) dueColor='#C2492E'; else if(o.dueSoon) dueColor=accent;
+      const labels=(o.labels||[]).map(k=>L[k]).filter(Boolean);
+      return {
+        raw:o, id:`${p.key}-${o.num}`, num:o.num, title:o.title,
+        titleStyle:`font-size:13.5px;line-height:1.4;font-weight:500;margin-bottom:11px;text-wrap:pretty;`+(canceled?'color:#A6957E;text-decoration:line-through':'color:#33261C'),
+        status:o.status, statusName:Sname[o.status], statusColor:S[o.status], canceled,
+        priority:o.priority, prioLabel:Pname[o.priority], prio:prioGlyph(o.priority),
+        assignee:a, assigneeInitials:a?a.initials:'?', assigneeColor:a?a.color:'#C6B69E', assigneeName:a?a.name:'Unassigned', unassigned:!a,
+        labels, hasLabels:labels.length>0,
+        due:o.due||'', hasDue:!!o.due, dueColor,
+        subCount:o.subCount||0, hasSub:(o.subCount||0)>0, commentCount:o.commentCount||0, hasComments:(o.commentCount||0)>0,
+        projectKey:p.key, projectName:p.name, projectColor:p.color, milestone:o.milestone||'\u2014',
+        cardStyle:`background:#FFFDF9;border:1px solid ${canceled?'#E7DAC4':'#ECE1CF'};border-radius:11px;padding:${compact?'11px 12px':'14px 15px'};cursor:pointer;box-shadow:0 1px 2px rgba(90,60,25,.05);`+(canceled?'opacity:.72':''),
+        open:()=>this.setState({ view:'issue', issueId:`${p.key}-${o.num}` }),
+      };
+    };
+
+    const built = rawIssues.map(o=>mk(o));
+    built.forEach(b=>{ b.showBadge = this.state.groupBy!=='status'; });
+
+    // ---- Board columns by grouping ----
+    const groupBy = this.state.groupBy;
+    let colDefs;
+    if(groupBy==='status') colDefs = statuses.map(s=>({ name:Sname[s], color:S[s], isDot:true, match:i=>i.status===s }));
+    else if(groupBy==='priority') colDefs = ['urgent','high','medium','low','none'].map(k=>({ name:Pname[k], color:P[k], isDot:true, match:i=>i.priority===k }));
+    else colDefs = team.map(m=>({ name:m.name, color:m.color, isAvatar:true, initials:m.initials, match:i=>i.assignee&&i.assignee.initials===m.initials })).concat([{ name:'Unassigned', color:'#B0A08B', isDot:true, match:i=>!i.assignee }]);
+    const columns = colDefs.map(d=>{ const issues=built.filter(d.match); return { name:d.name, color:d.color, isDot:!!d.isDot, isAvatar:!!d.isAvatar, initials:d.initials||'', count:issues.length, issues, empty:issues.length===0 }; });
+
+    // ---- Issue detail ----
+    const findRaw = (id) => {
+      for(const pk in rawByProject){ const f=rawByProject[pk].find(o=>`${pk}-${o.num}`===id); if(f) return {o:f,pk}; }
+      // sub-issues
+      for(const pk in rawByProject){ for(const o of rawByProject[pk]){ if(o.subs){ const s=o.subs.find(x=>`${pk}-${x.num}`===id); if(s) return {o:{...s,commentCount:1},pk}; } } }
+      const p=PK[id.split('-')[0]]; if(p){ const g=(genFor(p.key)).find(o=>`${p.key}-${o.num}`===id); if(g) return {o:g,pk:p.key}; }
+      return {o:rawByProject.WEB[6],pk:'WEB'};
+    };
+    const genThread=(n,seed)=>{ const pool=[{who:'DP',body:'Started on this — the sync layer is where it gets interesting.'},{who:'PR',body:'Copy is ready whenever you need it, just ping me.'},{who:'LN',body:'Careful with the read rules or the optimistic insert flickers.'},{who:'SF',body:'Reproduced on iOS Safari too, not just Chrome.'}]; const times=['3d','2d','yesterday','5h']; const out=[]; for(let i=0;i<Math.min(n,pool.length);i++){ const pp=pool[(i+seed)%pool.length]; const m=M[pp.who]; out.push({ initials:m.initials, color:m.color, name:m.name, time:times[i%times.length], body:pp.body }); } return out; };
+    const dRaw = findRaw(this.state.issueId);
+    const dp = PK[dRaw.pk];
+    const dm = mk(dRaw.o, dRaw.pk);
+    const dCanWrite = isMemberOf(dp.key) && !offline;
+    const subsRaw = dRaw.o.subs || [];
+    const subs = subsRaw.map(s=>{ const a=M[s.assignee]; return { id:`${dp.key}-${s.num}`, title:s.title, statusColor:S[s.status], strike:s.status==='canceled'?'color:#A6957E;text-decoration:line-through;':'', assigneeInitials:a?a.initials:'?', assigneeColor:a?a.color:'#C6B69E', open:()=>this.setState({view:'issue',issueId:`${dp.key}-${s.num}`}) }; });
+    const subDone = subsRaw.filter(s=>s.status==='done').length;
+    const thread = (dRaw.o.thread ? dRaw.o.thread.map(t=>{const m=M[t.who];return {initials:m.initials,color:m.color,name:m.name,time:t.t,body:t.body};}) : genThread(dm.commentCount, dm.num));
+    const metaVal = (label,value,opts={})=>({ label, value, valStyle:'display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#33261C;'+(dCanWrite?'cursor:pointer;padding:4px 8px 4px '+(opts.hasAvatar?'4px':'8px')+';border-radius:8px;margin-left:-8px;':'opacity:.85;'), hasSwatch:!!opts.swatch, swatchStyle:opts.swatch?`width:${opts.diamond?'10px':'9px'};height:${opts.diamond?'10px':'9px'};flex:none;background:${opts.swatch};`+(opts.diamond?'transform:rotate(45deg);border-radius:2px':'border-radius:3px'):'', hasAvatar:!!opts.avatar, avatarColor:opts.avatar?opts.avatar.color:'', avatarInitials:opts.avatar?opts.avatar.initials:'' });
+    const det = {
+      id:dm.id, title:dm.title, titleStyle:'font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.28;margin:0 0 16px;text-wrap:pretty;'+(dm.canceled?'color:#A6957E;text-decoration:line-through':''),
+      desc:dRaw.o.desc||`Tracked under ${dp.name}. Add detail, acceptance criteria and linked work here — this description syncs live to every client.`,
+      statusName:dm.statusName, statusColor:dm.statusColor, prio:dm.prio, prioLabel:dm.prioLabel,
+      projectName:dp.name, projectColor:dp.color,
+      created:'Jul 3, 2026', createdBy:(M[dRaw.o.assignee]||M.MA).name,
+      subs, hasSubs:subs.length>0, subDone, subTotal:subs.length, subPct: subs.length?Math.round(subDone/subs.length*100):0,
+      thread,
+      composerStyle:'padding:10px 13px;border:1px solid #E4D8C3;border-radius:10px;font-size:13px;'+(dCanWrite?'background:#FFFDF9;color:#A6957E':'background:#F3EBDB;color:#BCAB93;cursor:not-allowed'),
+      composerText: dCanWrite?'Leave a comment\u2026':(offline?'Changes need a connection':'Join this project to comment'),
+      back:()=>this.setState({view:'board',projectKey:dp.key}),
+      openProject:()=>this.setState({view:'board',projectKey:dp.key}),
+      meta:[
+        metaVal('Status', dm.statusName, {swatch:dm.statusColor}),
+        metaVal('Priority', dm.prioLabel, {swatch:P[dm.priority]}),
+        metaVal('Assignee', dm.assigneeName, {avatar:dm.assignee||{color:'#C6B69E',initials:'?'}}),
+        metaVal('Milestone', dm.milestone, {swatch:'#8B7A66',diamond:true}),
+        metaVal('Due date', dm.hasDue?dm.due:'No due date', {}),
+        metaVal('Project', dp.name, {swatch:dp.color}),
+      ],
+    };
+
+    // ---- Roadmap ----
+    const zoom=this.state.zoom;
+    const cols = zoom==='month'?['Jul','Aug','Sep','Oct']: zoom==='year'?["Q3 '26","Q4 '26","Q1 '27","Q2 '27"]:['Jul','Aug','Sep','Oct','Nov','Dec'];
+    const rmRows=[]; const undated=[];
+    projects.forEach(p=>{
+      const pct = (p.total-p.canceled)>0 ? Math.round(p.done/(p.total-p.canceled)*100) : 0;
+      const dim = p.status==='canceled';
+      if(p.start && p.target){
+        rmRows.push({ isProject:true, isMilestone:false, color:p.color, name:p.name, sub:`${p.start} \u2013 ${p.target}`, rowH:'52px', pct,
+          nameStyle:'font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'+(dim?'opacity:.55':''),
+          barStyle:`position:absolute;left:${p.barL}%;width:${p.barW}%;top:15px;height:22px;border-radius:7px;background:${p.color}30;border:1px solid ${p.color};display:flex;align-items:center;padding:0 11px;color:${p.color};font-size:11px;font-weight:600;overflow:hidden;`+(dim?'opacity:.5':''),
+          fillStyle:`position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:${p.color};opacity:.34;border-radius:6px`,
+          barLabel:p.name, canDrag:isAdmin && !offline });
+        (p.ms||[]).forEach(m=>{
+          if(m.at!=null) rmRows.push({ isProject:false, isMilestone:true, name:m.name, rowH:'34px', nameStyle:'font-size:12px;color:#6E5D4D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', markerStyle:`position:absolute;top:50%;left:${p.barL + p.barW*m.at/100}%;width:11px;height:11px;margin-left:-5px;margin-top:-5px;background:#8B7A66;transform:rotate(45deg);border-radius:2px;border:1.5px solid #FFFDF9` });
+          else undated.push({ isMilestone:true, isProject:false, name:`${m.name} \u00b7 ${p.name}`, missing:'No target date', weight:'500' });
+        });
+      } else {
+        undated.push({ isProject:true, isMilestone:false, color:p.color, name:p.name, missing: p.target?'Target date only \u2014 needs a start date':'No dates set', weight:'600' });
+        (p.ms||[]).forEach(m=>{ if(m.at==null) undated.push({ isMilestone:true, isProject:false, name:`${m.name} \u00b7 ${p.name}`, missing:'No target date', weight:'500' }); });
+      }
+      rmRows.forEach(r=>{ if(r.isProject && r.barLabel===p.name){} });
+    });
+    const todayPct=(10/31)/cols.length*100;
+    const roadmap = { cols, rows:rmRows, undated, hasUndated:undated.length>0,
+      todayStyle:`position:absolute;top:-1200px;bottom:0;left:${todayPct}%;width:2px;background:#C2492E`,
+      dragNote: isAdmin?(offline?'Reconnect to reschedule':'Drag a bar to reschedule'):'Read-only \u2014 only admins can reschedule' };
+
+    // ---- Notifications ----
+    const notifsRaw = [
+      { id:'n1', actor:'MA', action:'assigned you', issueId:'WEB-31', issueTitle:'Build Kanban board drag-and-drop', project:'Website Redesign', time:'12m ago', unread:true },
+      { id:'n2', actor:'LN', action:'mentioned you on', issueId:'WEB-36', issueTitle:'Implement per-project write rules in mutators', project:'Website Redesign', time:'48m ago', unread:true },
+      { id:'n3', actor:'PR', action:'commented on', issueId:'WEB-38', issueTitle:'Rework homepage hero layout and motion', project:'Website Redesign', time:'2h ago', unread:true },
+      { id:'n4', actor:'DP', action:'commented on', issueId:'MOB-12', issueTitle:'Wire the first synced query', project:'Mobile App v2', time:'5h ago', unread:false },
+      { id:'n5', actor:'PR', action:'mentioned you on', issueId:'WEB-42', issueTitle:'Define brand tone guidelines for the new site', project:'Website Redesign', time:'Yesterday', unread:false },
+      { id:'n6', actor:'SF', action:'assigned you', issueId:'MOB-14', issueTitle:'Review with the team', project:'Mobile App v2', time:'Yesterday', unread:false },
+    ];
+    const readMap=this.state.notifRead||{};
+    const notifs = notifsRaw.map(n=>{ const a=M[n.actor]; const unread=n.unread&&!readMap[n.id]; return {
+      ...n, hasActor:true, actorName:a.name, actorColor:a.color, actorInitials:a.initials, weight:unread?'700':'600',
+      projectColor:(projects.find(p=>p.name===n.project)||{}).color||accent, dotColor:unread?accent:'transparent',
+      rowStyle:'display:flex;gap:12px;padding:14px 14px;border-radius:10px;cursor:pointer;'+(unread?'background:#FBF3E4':'background:transparent'),
+      open:()=>this.setState({ view:'issue', issueId:n.issueId, projectKey:n.issueId.split('-')[0], notifRead:{...(this.state.notifRead||{}),[n.id]:true} }),
+    };});
+    const notifUnread = notifs.filter(n=>n.unread).length;
+
+    // ---- Project settings ----
+    const psStatusName={active:'Active',planned:'Planned',paused:'Paused',completed:'Completed',canceled:'Canceled'};
+    const psStatusColor={active:'#6E8B6A',planned:'#808A98',paused:'#B0A08B',completed:'#6E8B6A',canceled:'#C2492E'};
+    const palette=['#B26B32','#8C5A3B','#6E8B6A','#4E6E8C','#7A6E58','#A65E4E'];
+    const canDelete = cur.status==='canceled';
+    const ps = {
+      name:cur.name, desc:`Strategy, design and delivery for ${cur.name}. This overview rolls milestones and open work into one place.`,
+      start:cur.start||'Not set', target:cur.target||'Not set',
+      leadName:M[cur.lead].name, leadColor:M[cur.lead].color, leadInitials:M[cur.lead].initials,
+      statusName:psStatusName[cur.status], statusColor:psStatusColor[cur.status],
+      inputStyle:'width:100%;padding:10px 12px;border:1px solid #E0D3BC;border-radius:9px;background:#FCF8EF;font-size:13.5px;color:#33261C;outline:none;resize:none',
+      pickStyle:'display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #E0D3BC;border-radius:9px;background:#FCF8EF;font-size:13.5px;color:#33261C;cursor:pointer',
+      swatches:palette.map(c=>({ style:`width:28px;height:28px;border-radius:9px;cursor:pointer;background:${c};`+(c===cur.color?`box-shadow:0 0 0 2px #FFFDF9,0 0 0 4px ${c}`:'') })),
+      members:cur.members.map(i=>M[i]),
+      milestones:(cur.ms||[]).map(m=>({ name:m.name, target:m.at!=null?'On timeline':'No date' })).concat(cur.key==='WEB'?[{name:'Design System',target:'Jul 5'}]:[]),
+      deleteNote: canDelete?'This project is canceled and can be permanently deleted. This cascades to all its issues.':'Cancel the project first (Status \u2192 Canceled). Deletion is irreversible and cascades to every issue.',
+      deleteBtnStyle:'margin-left:auto;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;'+(canDelete?'border:none;background:#C2492E;color:#fff;cursor:pointer':'border:1px solid #E7DAC4;background:#F3EBDB;color:#C6B69E;cursor:not-allowed'),
+    };
+
+    // ---- Workspace settings ----
+    const wsTab=this.state.wsTab;
+    const wsTabStyle=(on)=>'padding:11px 14px;font-size:13.5px;font-weight:'+(on?'600':'500')+';color:'+(on?'#33261C':'#8B7A66')+';border-bottom:2px solid '+(on?accent:'transparent')+';cursor:pointer;margin-bottom:-1px';
+    const ws = {
+      isMembers:wsTab==='members', isInvites:wsTab==='invites', isLabels:wsTab==='labels',
+      membersTab:wsTabStyle(wsTab==='members'), invitesTab:wsTabStyle(wsTab==='invites'), labelsTab:wsTabStyle(wsTab==='labels'),
+      tabMembers:()=>this.setState({wsTab:'members'}), tabInvites:()=>this.setState({wsTab:'invites'}), tabLabels:()=>this.setState({wsTab:'labels'}),
+      members:team.map(m=>({ ...m, roleStyle:'margin-left:auto;padding:3px 10px;border-radius:7px;font-size:11.5px;font-weight:600;'+(m.role==='admin'?`background:${accent}1e;color:${accent}`:'background:#EFE4D2;color:#8B7A66'), actionLabel:m.role==='admin'?'':'Deactivate' })),
+      invites:[ {email:'jordan@partner.co',role:'member',expires:'in 12 days'}, {email:'quinn@teamworks.app',role:'admin',expires:'in 5 days'}, {email:'riley@studio.design',role:'member',expires:'in 13 days'} ],
+      labels:Object.values(L),
+    };
+
+    // ---- New issue composer ----
+    const cStatus=this.state.cStatus, cPrio=this.state.cPrio, cAssignee=this.state.cAssignee;
+    const cycle=(arr,cur2,set)=>{ const i=arr.indexOf(cur2); set(arr[(i+1)%arr.length]); };
+    const ca=cAssignee?M[cAssignee]:null;
+    const composer = {
+      statusLabel:Sname[cStatus], statusColor:S[cStatus], prioLabel:Pname[cPrio], prio:prioGlyph(cPrio),
+      cycleStatus:()=>cycle(statuses,cStatus,k=>this.setState({cStatus:k})),
+      cyclePrio:()=>cycle(['none','low','medium','high','urgent'],cPrio,k=>this.setState({cPrio:k})),
+      hasAssignee:!!ca, noAssignee:!ca, assigneeName:ca?ca.name:'Assignee', assigneeColor:ca?ca.color:'', assigneeInitials:ca?ca.initials:'',
+      assigneeOpts:team.map(m=>({...m,pick:()=>this.setState({cAssignee:m.initials})})),
+    };
+
+    // ---- New project swatches ----
+    const newColor=this.state.newColor||accent;
+    const newSwatches=palette.map(c=>({ pick:()=>this.setState({newColor:c}), style:`width:28px;height:28px;border-radius:9px;cursor:pointer;background:${c};`+(c===newColor?`box-shadow:0 0 0 2px #FCF8EF,0 0 0 4px ${c}`:'') }));
+
+    // ---- Nav + header ----
+    const projectsNav = projects.map(p=>{ const on=(view==='board'||view==='project-settings')&&this.state.projectKey===p.key; return {
+      key:p.key, name:p.name, color:p.color, count:p.total,
+      open:()=>this.setState({view:'board',projectKey:p.key}),
+      rowStyle:'display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;font-size:13px;cursor:pointer;'+(on?`background:${accent}1e;color:${accent};font-weight:600`:'color:#5F503F;font-weight:500'),
+    };});
+    const linkStyle=(on)=>'display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:13.5px;cursor:pointer;'+(on?`background:${accent}1e;color:${accent};font-weight:600`:'background:transparent;color:#6E5D4D;font-weight:500');
+    const segStyle=(on)=>'padding:5px 12px;border-radius:7px;font-size:12.5px;cursor:pointer;'+(on?'background:#FFFDF9;color:#33261C;font-weight:600;box-shadow:0 1px 2px rgba(80,45,15,.14)':'background:transparent;color:#8B7A66;font-weight:500');
+
+    const isBoard=view==='board', isRoadmap=view==='roadmap', isIssue=view==='issue', isNotifs=view==='notifications', isProjectSettings=view==='project-settings', isWorkspace=view==='workspace';
+
+    // header
+    let header={ hasDot:false, dotColor:'', title:'', subtitle:'' };
+    if(isBoard){ header={ hasDot:true, dotColor:cur.color, title:cur.name, subtitle:`${cur.key} \u00b7 ${cur.total} issues` }; }
+    else if(isRoadmap){ header={ hasDot:false, title:'Roadmap', subtitle:`${projects.length} projects \u00b7 Q3\u2013Q4 2026` }; }
+    else if(isIssue){ header={ hasDot:false, title:det.id, subtitle:det.projectName }; }
+    else if(isNotifs){ header={ hasDot:false, title:'Notifications', subtitle:`${notifUnread} unread \u00b7 ${notifs.length} total` }; }
+    else if(isProjectSettings){ header={ hasDot:true, dotColor:cur.color, title:'Project settings', subtitle:cur.name }; }
+    else if(isWorkspace){ header={ hasDot:false, title:'Workspace settings', subtitle:'Members, invites & labels' }; }
+
+    // permission / offline banner
+    let banner={ show:false };
+    const boardWritable = isMemberOf(cur.key) && !offline;
+    if(isBoard && !boardWritable){ banner={ show:true, bg:'#FBEEE6', border:'#F0D8C8', color:'#B4552E', text: offline?'You\u2019re offline. Reads work from the local copy, but changes need a connection.':`You\u2019re not a member of ${cur.name}. You can read everything here, but only members can create or edit issues \u2014 ask an admin to add you.` }; }
+    else if(isIssue && !dCanWrite){ banner={ show:true, bg:'#FBEEE6', border:'#F0D8C8', color:'#B4552E', text: offline?'You\u2019re offline. Editing is disabled until you reconnect.':`You\u2019re assigned here but not a member of ${dp.name}. Ask an admin to add you to edit this issue.` }; }
+    else if(offline && (isRoadmap||isProjectSettings||isWorkspace)){ banner={ show:true, bg:'#FBEEE6', border:'#F0D8C8', color:'#B4552E', text:'You\u2019re offline. Changes need a connection.' }; }
+
+    // auth
+    const as=this.state.authState;
+    const auth={ isForm:as==='form', isSent:as==='sent', isVerify:as==='verify', isExpired:as==='expired',
+      send:()=>this.setState({authState:'sent'}), toVerify:()=>this.setState({authState:'verify'}), toForm:()=>this.setState({authState:'form'}), toExpired:()=>this.setState({authState:'expired'}),
+      signIn:()=>this.setState({view:'board',authState:'form'}) };
+
+    return {
+      accent, isLoading, isAdmin,
+      isAuth: view==='signin', isApp: view!=='signin',
+      auth,
+      team, projectsNav, isMemberOf,
+      roadmapNavStyle:linkStyle(isRoadmap), notifNavStyle:linkStyle(isNotifs), wsNavStyle:linkStyle(isWorkspace),
+      goRoadmap:()=>this.setState({view:'roadmap'}), goNotifs:()=>this.setState({view:'notifications'}), goWorkspace:()=>this.setState({view:'workspace'}),
+      signOut:()=>this.setState({view:'signin',authState:'form'}),
+      roleLabel:isAdmin?'Admin':'Member', hasUnread:notifUnread>0, notifUnread,
+      header,
+      isBoard, isRoadmap, isIssue, isNotifs, isProjectSettings, isWorkspace,
+      showBoardTools:isBoard||isIssue,
+      banner,
+      group:{ statusStyle:segStyle(groupBy==='status'), assigneeStyle:segStyle(groupBy==='assignee'), priorityStyle:segStyle(groupBy==='priority'), setStatus:()=>this.setState({groupBy:'status'}), setAssignee:()=>this.setState({groupBy:'assignee'}), setPriority:()=>this.setState({groupBy:'priority'}) },
+      zoom:{ monthStyle:segStyle(zoom==='month'), quarterStyle:segStyle(zoom==='quarter'), yearStyle:segStyle(zoom==='year'), setMonth:()=>this.setState({zoom:'month'}), setQuarter:()=>this.setState({zoom:'quarter'}), setYear:()=>this.setState({zoom:'year'}) },
+      columns, colGap:compact?'12px':'18px', colWidth:compact?272:300, cardGap:compact?'8px':'11px',
+      det,
+      roadmap,
+      notifs, notifsEmpty:notifs.length===0, notifsHas:notifs.length>0, markAllRead:()=>{ const all={}; notifsRaw.forEach(n=>all[n.id]=true); this.setState({notifRead:all}); },
+      ps, ws,
+      composer, curProjectName:cur.name, curProjectColor:cur.color,
+      issueModalOpen:!!this.state.issueModalOpen, openIssueModal:()=>this.setState({issueModalOpen:true}), closeIssueModal:()=>this.setState({issueModalOpen:false}),
+      newOpen:!!this.state.newOpen, newColor, newSwatches, openNew:()=>this.setState({newOpen:true}), closeNew:()=>this.setState({newOpen:false}),
+    };
+  }
+}
+</script>
+</body>
+</html>
