@@ -51,9 +51,7 @@ Flag this; don't silently code around it. `package.json` has only Next 14 / Reac
 
 ### ~~4. `docs/ui-spec.md`~~ — done
 
-### 5. `docs/notifications.md`
-
-The least-specified feature. Trigger events, @mention parsing, server-side notification writes, dedup/batching, `emailed_at` semantics, sending mechanism (outbox table + worker?), retries, unsubscribe.
+### ~~5. `docs/notifications.md`~~ — done
 
 ### 6. `docs/attachments.md`
 
@@ -91,4 +89,4 @@ Use the brainstorming skill. Ask **one question at a time**, multiple-choice whe
 
 Every doc ends with a "changes this spec requires elsewhere" section, and any contradiction it creates with `team-works-concept-brief.md` or the other docs gets reconciled immediately in the same session — grep for the affected terms rather than trusting the list, since that is how a fifth contradiction turned up last time. `README.md` and `CLAUDE.md` now count as reconciliation targets too.
 
-Start with `docs/notifications.md`.
+Start with `docs/attachments.md`.

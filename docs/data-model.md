@@ -308,7 +308,7 @@ The last admin cannot be deactivated (permissions.md §7). That is a mutator che
 | `id` | `uuid` | PK |
 | `key` | `text NOT NULL UNIQUE` | `CHECK (key ~ '^[A-Z][A-Z0-9]{1,5}$')`, immutable (§6) |
 | `name` | `text NOT NULL` | `CHECK (length(btrim(name)) > 0)` |
-| `description` | `text` | Markdown, nullable |
+| `description` | `text` | Plain text, nullable |
 | `status` | `text NOT NULL DEFAULT 'planned'` | `CHECK (status IN ('planned','active','paused','completed','canceled'))` |
 | `lead_id` | `uuid` | → `user(id)` `RESTRICT`, nullable. Informational only; grants nothing (permissions.md §2) |
 | `start_date` | `date` | nullable |
@@ -356,7 +356,7 @@ Either date may be absent. A project with no dates has no bar on the roadmap; [r
 | `milestone_id` | `uuid` | nullable, composite FK (§8) |
 | `parent_issue_id` | `uuid` | nullable, composite FK (§8) |
 | `title` | `text NOT NULL` | `CHECK (length(btrim(title)) > 0)` |
-| `description` | `text` | Markdown, nullable |
+| `description` | `text` | Plain text, nullable — may contain a mention token (notifications.md §2) |
 | `status` | `text NOT NULL DEFAULT 'backlog'` | `CHECK (status IN ('backlog','todo','in_progress','done','canceled'))` |
 | `priority` | `text NOT NULL DEFAULT 'none'` | `CHECK (priority IN ('none','low','medium','high','urgent'))` |
 | `assignee_id` | `uuid` | → `user(id)` `RESTRICT`, nullable |
@@ -398,7 +398,7 @@ Workspace-wide set, curated by admins, applied by any member (permissions.md §3
 | `id` | `uuid` | PK |
 | `issue_id` | `uuid NOT NULL` | → `issue(id)` `CASCADE` |
 | `author_id` | `uuid NOT NULL` | → `user(id)` `RESTRICT` |
-| `body` | `text NOT NULL` | Markdown, `CHECK (length(btrim(body)) > 0)` |
+| `body` | `text NOT NULL` | Plain text, may contain a mention token (notifications.md §2), `CHECK (length(btrim(body)) > 0)` |
 | `created_at`, `updated_at` | `timestamptz NOT NULL` | |
 
 `UNIQUE (id, issue_id)` — target of the composite FKs on `attachment` and `notification`.
@@ -448,9 +448,19 @@ CHECK (
   (type = 'comment'    AND comment_id IS NOT NULL) OR
   (type = 'mention')
 )
+
+-- at most one notification per user per comment, regardless of type
+CREATE UNIQUE INDEX notification_user_comment_uq
+  ON notification (user_id, comment_id)
+  WHERE comment_id IS NOT NULL;
+
+-- at most one mention notification per user per issue description
+CREATE UNIQUE INDEX notification_user_issue_mention_uq
+  ON notification (user_id, issue_id)
+  WHERE type = 'mention' AND comment_id IS NULL;
 ```
 
-No `updated_at`; `read_at` and `emailed_at` are the only mutable fields and each is its own timestamp.
+No `updated_at`; `read_at` and `emailed_at` are the only mutable fields and each is its own timestamp. The two partial unique indexes are [notifications.md](./notifications.md)'s dedup policy (§4 there); this document only fixed the placeholder shape.
 
 **`source_id` is gone.** The brief's single untyped pointer had no discriminator and could not be a foreign key. With hard deletes in force (§4) that is a live hazard: every delete mutator would have to remember to clean up matching notifications, and a single omission renders as a notification linking to nothing. Real foreign keys make the cleanup automatic.
 
