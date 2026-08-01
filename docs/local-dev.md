@@ -56,6 +56,7 @@ Fills [auth.md](./auth.md) §10's contract with local values. Copy `.env.example
 | Variable | Local value | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | `postgresql://team_works@localhost:5432/team_works_dev` | from §2 |
+| `ATTACHMENTS_DIR` | `./.data/attachments` | create it (`mkdir -p .data/attachments`) before first upload; gitignored |
 | `AUTH_SECRET` | output of `openssl rand -base64 32` | ≥ 32 bytes, per auth.md §10 |
 | `ZERO_AUTH_SECRET` | **the same value as `AUTH_SECRET`** | one secret, two names (auth.md §2) — do not generate a second value |
 | `APP_URL` | `http://localhost:3000` | plain HTTP locally, so the `Secure` cookie flag is auto-omitted (auth.md §7) — no local-only branch needed in the cookie code |

@@ -15,6 +15,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/local-dev.md](docs/local-dev.md) — local setup: Postgres, `zero-cache`, migrations, seed data
 - [docs/ui-spec.md](docs/ui-spec.md) — screens, React Aria components, design tokens, board semantics
 - [docs/notifications.md](docs/notifications.md) — triggers, mention parsing, dedup, email outbox and retries
+- [docs/attachments.md](docs/attachments.md) — upload, authorized download, storage layout, orphan reclamation
 - [docs/state-machines.md](docs/state-machines.md) — issue and project status transitions, cross-entity effects
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 

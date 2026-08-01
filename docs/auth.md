@@ -369,6 +369,7 @@ This replaces the scaffold's placeholder `SECRET_KEY`, which data-model.md §12 
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | yes | Postgres connection string |
+| `ATTACHMENTS_DIR` | yes | absolute path; must exist and be writable at boot — [attachments.md](./attachments.md) §3 |
 | `AUTH_SECRET` | yes | ≥ 32 bytes; signs and verifies the access JWT |
 | `ZERO_AUTH_SECRET` | yes | **the same value as `AUTH_SECRET`**, read by the `zero-cache` container |
 | `APP_URL` | yes | absolute origin; builds magic links, sets the `Origin` check, decides the `Secure` cookie flag |
