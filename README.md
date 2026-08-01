@@ -16,8 +16,10 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/ui-spec.md](docs/ui-spec.md) — screens, React Aria components, design tokens, board semantics
 - [docs/notifications.md](docs/notifications.md) — triggers, mention parsing, dedup, email outbox and retries
 - [docs/attachments.md](docs/attachments.md) — upload, authorized download, storage layout, orphan reclamation
-- [docs/state-machines.md](docs/state-machines.md) — issue and project status transitions, cross-entity effects
+- [docs/roadmap-view.md](docs/roadmap-view.md) — Gantt task mapping, undated records, progress derivation, reschedule semantics, mobile behavior
 - [docs/deployment.md](docs/deployment.md) — provisioning, atomic deploys, migrations and the `zero-cache` replica reset, backups and restore drill
+- [docs/state-machines.md](docs/state-machines.md) — issue and project status transitions, cross-entity effects
+- [docs/testing.md](docs/testing.md) — test runner, database strategy, and what runs at each tier
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack
@@ -33,4 +35,4 @@ npm install
 npm run dev
 ```
 
-Runs on http://localhost:3000. Also available: `npm run build`, `npm run lint`. There is no test runner configured yet.
+Runs on http://localhost:3000. Also available: `npm run build`, `npm run lint`. There is no test runner configured yet — see [docs/testing.md](docs/testing.md) for the plan.

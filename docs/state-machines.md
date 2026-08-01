@@ -55,6 +55,8 @@ This is a status question, distinct from **deletion**, which already has its own
 
 ---
 
+[testing.md](./testing.md) §5 turns the "nothing cascades" claims in §3 above into permanent regression tests — the mechanism this document otherwise only asks a future reader to trust from silence.
+
 ## 4. Enforcement summary
 
 | Rule | Enforced by |

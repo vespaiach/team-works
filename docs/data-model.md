@@ -50,7 +50,7 @@ The known hazard is that this is one line which must appear in every write path,
    await db.update(issue).set(touched({ status })).where(eq(issue.id, id))
    ```
 
-2. **A test that drives every mutator.** For each mutator that updates a row, read `updated_at`, invoke the mutator, assert the value advanced. This is the test that would otherwise not exist, so it is not optional.
+2. **A test that drives every mutator.** For each mutator that updates a row, read `updated_at`, invoke the mutator, assert the value advanced. This is the test that would otherwise not exist, so it is not optional. [testing.md](./testing.md) §5 owns where this runs (integration tier, against a real database).
 
 The client's optimistic run sets its own `updated_at` so the UI has something to render immediately; the server's authoritative value arrives via replication a few milliseconds later and the client rebases. That correction is invisible and is the same reconciliation Zero performs for every other server-assigned value.
 
@@ -521,6 +521,8 @@ The self-referential composite FK on `issue` interacts with the project-level `C
 
 **If it fails:** drop the `parent_issue_id` composite FK, keep a plain self-FK with `ON DELETE SET NULL`, and enforce the same-project rule in `createIssue` and `updateIssue` as permissions.md §6.2 originally specified. Nothing else in this document changes.
 
+[testing.md](./testing.md) §5 promotes this from a one-off verification to a permanent integration-tier regression test, run against a real database either way.
+
 ---
 
 ## 9. Invariants
@@ -602,7 +604,7 @@ I have not confirmed how the pinned version of Zero maps Postgres `date`. Both b
 - **If Zero maps `date`** — use `date`, as §1 and §7 specify. Nothing changes.
 - **If it does not** — the three columns (`issue.due_date`, `project.start_date`, `project.target_date`) become `text` holding ISO `YYYY-MM-DD`, with `CHECK (col ~ '^\d{4}-\d{2}-\d{2}$')`. Lexical ordering matches chronological ordering for that format, so range queries and `ORDER BY` still work. The reason for avoiding `timestamptz` (§1) applies to this fallback too and is why the fallback is `text` rather than an instant.
 
-Resolve this in build step 1 and record the outcome here.
+Resolve this in build step 1 and record the outcome here. [testing.md](./testing.md) §8 owns the verification test — it needs a live `zero-cache`, so it runs at the E2E tier, and becomes a permanent regression test on whichever branch wins.
 
 ### The one read rule
 

@@ -24,11 +24,12 @@ Add `.nvmrc` at the repo root containing `20`.
 ## 2. Postgres (native)
 
 1. Install: `brew install postgresql@15` (macOS) or `sudo apt install postgresql-15` (Linux), then start it as a service.
-2. Create a role and database for the project:
+2. Create a role and two databases for the project — one for development, one for the test suite ([testing.md](./testing.md) §3):
 
    ```bash
    createuser -s team_works
    createdb -O team_works team_works_dev
+   createdb -O team_works team_works_test
    ```
 
 3. **Enable logical replication.** Find `postgresql.conf` (`brew` puts it under the formula's data dir; `apt` under `/etc/postgresql/15/main/`) and set:
@@ -110,7 +111,9 @@ npm run db:generate   # drizzle-kit generate — writes a new migration file fro
 npm run db:migrate     # applies pending migrations to DATABASE_URL
 ```
 
-Run `db:migrate` once after cloning and after every pull that touches the schema.
+Run `db:migrate` once after cloning and after every pull that touches the schema. Run it a second time against `team_works_test` (`DATABASE_URL=postgresql://team_works@localhost:5432/team_works_test npm run db:migrate`) before running the test suite for the first time and after every pull that touches the schema — [testing.md](./testing.md) §3 keeps that database on the same migration history rather than `drizzle-kit push`.
+
+One additional one-time step for the E2E layer: `npx playwright install` downloads the browser binaries Playwright drives (testing.md §2, §8).
 
 ---
 

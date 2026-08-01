@@ -100,7 +100,7 @@ This document doesn't specify the backup mechanism (rsync, tar snapshot, etc.) �
 
 ## 7. Testing
 
-Beyond the predicate and mutator tests permissions.md §10, auth.md §12 and notifications.md §8 already specify:
+Beyond the predicate and mutator tests permissions.md §10, auth.md §12 and notifications.md §8 already specify. See [testing.md](./testing.md) §7 for the runner and database strategy — integration-tier, with `ATTACHMENTS_DIR` pointed at a temp directory per test run:
 
 - **Upload authorization.** A non-member of the issue's project is rejected before any file write; a deactivated user is rejected even with a still-valid access token.
 - **Size and MIME enforcement.** A file over 25 MB is aborted mid-stream, not buffered then rejected. A disallowed content type, including `image/svg+xml`, is rejected before disk write.
