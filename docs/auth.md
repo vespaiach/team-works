@@ -405,7 +405,7 @@ Neither is load-bearing for correctness — expiry is checked on every read — 
 
 ## 12. Testing
 
-Beyond the predicate and mutator tests permissions.md §10 already specifies.
+Beyond the predicate and mutator tests permissions.md §10 already specifies. See [testing.md](./testing.md) for the runner and database strategy — everything below is integration-tier against a real Postgres, except the boot-failure case, which spawns the process itself.
 
 **Storage and redemption**
 

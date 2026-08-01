@@ -67,9 +67,7 @@ One short ADR per settled decision in brief §7. Zero and frappe-gantt matter mo
 
 ### ~~10. `docs/state-machines.md`~~ — done
 
-### 11. `docs/testing.md`
-
-Testing a Zero app: mutator unit tests, permission predicate tests, sync-scope tests, whether E2E runs against a real `zero-cache`.
+### ~~11. `docs/testing.md`~~ — done
 
 ### 12. `docs/non-functional.md`
 

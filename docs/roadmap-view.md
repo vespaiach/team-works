@@ -76,7 +76,7 @@ The chart itself keeps its full width and pans via horizontal scroll, the same i
 
 ## 8. Testing
 
-Beyond the mutator and predicate tests permissions.md §10 and data-model.md already specify:
+Beyond the mutator and predicate tests permissions.md §10 and data-model.md already specify. See [testing.md](./testing.md) for the runner and database strategy — all integration-tier, against a real Postgres, no `zero-cache` needed for any of the below:
 
 - **Bucketing.** A project with both dates renders a bar; missing either one routes it to the Undated panel with the correct "what's missing" label. A milestone with no `target_date` is grouped under its project in the same panel even when the project itself has a bar.
 - **Progress arithmetic.** A project with 2 done, 1 canceled, 1 open issues reports `2/3`, not `2/4`. A project with issues that are all canceled, or none at all, reports `0`, not `NaN`.

@@ -18,6 +18,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/attachments.md](docs/attachments.md) — upload, authorized download, storage layout, orphan reclamation
 - [docs/roadmap-view.md](docs/roadmap-view.md) — Gantt task mapping, undated records, progress derivation, reschedule semantics, mobile behavior
 - [docs/state-machines.md](docs/state-machines.md) — issue and project status transitions, cross-entity effects
+- [docs/testing.md](docs/testing.md) — test runner, database strategy, and what runs at each tier
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack
@@ -33,4 +34,4 @@ npm install
 npm run dev
 ```
 
-Runs on http://localhost:3000. Also available: `npm run build`, `npm run lint`. There is no test runner configured yet.
+Runs on http://localhost:3000. Also available: `npm run build`, `npm run lint`. There is no test runner configured yet — see [docs/testing.md](docs/testing.md) for the plan.

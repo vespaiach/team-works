@@ -215,6 +215,8 @@ The client's `Membership` set is derived from the synced `ProjectMember` rows fo
 
 ## 10. Testing
 
+See [testing.md](./testing.md) for the runner, the test database strategy, and which tier each item below runs in — predicate tests are unit-tier and need no database; everything else here is integration-tier, against a real Postgres.
+
 - **Predicate tests.** `permissions.ts` is pure, so it gets table-driven unit tests: every cell of the §3 matrix is one case. This is the bulk of the coverage and it is cheap.
 - **Sync scope tests.** With a seeded workspace, assert that a client receives all projects and issues regardless of membership, and that it receives its own notifications and no one else's.
 - **Mutator authorization tests.** For each mutator in §5, one allowed case and one denied case, asserting the denial happens server-side even when the client-side check is bypassed.
