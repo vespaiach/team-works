@@ -129,7 +129,7 @@ The trade-off is deliberate: there are no confidential projects in v1. Transpare
 
 ### Deployment (VPS)
 
-**Single VPS** runs: the Next.js app (PM2 or systemd), **`zero-cache` as a Docker container on the same box** (decided), PostgreSQL with `wal_level=logical`, and nginx as the reverse proxy with Certbot SSL. Give `zero-cache` fast local storage for its replica. An SMTP path is required from **build step 1**, not step 4 — magic links are how anyone signs in at all ([auth.md](./auth.md) §10). Notification email later reuses the same transport behind an outbox.
+**Single VPS** runs: the Next.js app (**systemd**, decided — see [deployment.md](./deployment.md)), **`zero-cache` as a Docker container on the same box** (decided), PostgreSQL with `wal_level=logical`, and nginx as the reverse proxy with Certbot SSL. Give `zero-cache` fast local storage for its replica. An SMTP path is required from **build step 1**, not step 4 — magic links are how anyone signs in at all ([auth.md](./auth.md) §10). Notification email later reuses the same transport behind an outbox.
 
 ---
 
@@ -177,6 +177,10 @@ From [auth.md](./auth.md):
 17. **Magic links:** `GET` renders a confirmation page and consumes nothing; a `POST` redeems. Mail scanners cannot burn a single-use token
 18. **Invites:** an `invite` row only; the `user` row is created when the link is first redeemed, which leaves the publication's six synced `user` columns untouched
 19. **First admin:** a one-off `admin:grant` CLI over SSH, which doubles as the break-glass recovery from total lockout
+
+From [deployment.md](./deployment.md):
+
+20. **Process manager: systemd**, not PM2. One supervision system for the app, the background timers, and (indirectly) the `zero-cache` container, rather than two.
 
 **Open**
 

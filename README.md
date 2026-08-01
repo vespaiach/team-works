@@ -17,6 +17,7 @@ Work lives as issues; issues roll up into projects; projects carry milestones. T
 - [docs/notifications.md](docs/notifications.md) — triggers, mention parsing, dedup, email outbox and retries
 - [docs/attachments.md](docs/attachments.md) — upload, authorized download, storage layout, orphan reclamation
 - [docs/state-machines.md](docs/state-machines.md) — issue and project status transitions, cross-entity effects
+- [docs/deployment.md](docs/deployment.md) — provisioning, atomic deploys, migrations and the `zero-cache` replica reset, backups and restore drill
 - [docs/HANDOFF.md](docs/HANDOFF.md) — remaining documentation backlog
 
 ## Planned stack

@@ -59,9 +59,7 @@ Flag this; don't silently code around it. `package.json` has only Next 14 / Reac
 
 Frappe Gantt semantics: null start/target dates, milestones without dates, what `progress` derives from, whether dragging a project moves its milestones, mobile behavior.
 
-### 8. `docs/deployment.md`
-
-Runbook. Provisioning, nginx, Certbot, PM2/systemd, backups (Postgres + attachment disk), restore drill. Critically: the **schema migration procedure including how the `zero-cache` replica is handled** — a migration can require a replica reset.
+### ~~8. `docs/deployment.md`~~ — done
 
 ### 9. `docs/adr/`
 
