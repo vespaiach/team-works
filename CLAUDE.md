@@ -19,7 +19,9 @@ All four are dated 2026-07-31 and reconciled with each other. A change that cont
 ```bash
 npm run dev      # Next.js dev server on :3000 (prefer preview_start with "team-works-dev" in .claude/launch.json)
 npm run build
-npm run lint
+npm run lint     # Biome lint (biome.json), recommended rules; docs/prototype/ is excluded
+npm run format   # Biome format --write
+npm run check    # Biome check --write (format + lint + organize imports, all auto-fixed)
 ```
 
 No test runner yet — adding one (Vitest + Playwright, per [docs/testing.md](docs/testing.md)) is part of build step 1.
