@@ -1,0 +1,15 @@
+[Unit]
+Description=Team Works application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/team-works/current
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+EnvironmentFile=/opt/team-works/shared/.env
+
+[Install]
+WantedBy=multi-user.target
