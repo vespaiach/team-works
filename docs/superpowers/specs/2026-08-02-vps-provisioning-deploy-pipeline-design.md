@@ -65,15 +65,19 @@ Not created in this task. Standing up the `zero-cache` container now would crash
 
 ## 6. Operator runbook (what you run by hand)
 
-1. `scripts/provision-vps.sh` as root on the fresh Debian 13 box.
-2. Verify the `deploy` user's SSH key works (`ssh deploy@<host>`), **then and only then** manually flip `PasswordAuthentication no` and `PermitRootLogin no` in `sshd_config` and restart `sshd`. Not automated — a mistake here locks you out, and it's cheap to do carefully by hand once.
-3. Install the systemd unit: copy `deploy/systemd/team-works.service` to `/etc/systemd/system/team-works.service`, then `systemctl daemon-reload && systemctl enable team-works` (don't start it yet — there's no release at `/opt/team-works/current` until the first deploy runs).
-4. Install the nginx site: replace the placeholder domain in `deploy/nginx/team-works.conf`, copy it to `/etc/nginx/sites-available/team-works.conf`, symlink it into `sites-enabled`, then `nginx -t && systemctl reload nginx`. Certbot (next step) needs an existing enabled site to attach the certificate to.
-5. `certbot --nginx -d <your-real-domain>` once DNS points at the box.
-6. Write `/opt/team-works/shared/.env` from `deploy/env.production.example`, with real generated secrets (`AUTH_SECRET` = `ZERO_AUTH_SECRET`, both ≥32 bytes) and real SMTP credentials.
-7. Copy `deploy.sh` to `/opt/team-works/deploy.sh` (the CI SSH step runs this fixed path — updates to the repo's `deploy.sh` need re-copying here; a known small gap in deployment.md's design, not fixed by this task).
-8. Add the three GitHub Actions secrets yourself (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`) — not something I can or should do on your behalf.
-9. Push to `main`; confirm against the Definition of Done below. The first push will start `team-works.service` for real (via `deploy.sh`'s `sudo systemctl restart team-works`) — nothing before this step actually runs the app.
+1. Get this repo's files onto the box. Copy the provisioning script over and run it as root — e.g. `scp scripts/provision-vps.sh root@<host>:/root/`, then `ssh root@<host> bash /root/provision-vps.sh`. It installs `git` among its packages, so afterwards you can clone the full repo for the remaining files this runbook references: `git clone https://github.com/vespaiach/team-works.git /root/team-works-src`. Later steps that say "copy `deploy/...`" or "copy `deploy.sh`" mean from this checkout.
+2. Authorize the deploy SSH key. Generate a dedicated keypair locally: `ssh-keygen -t ed25519 -f deploy_key -N ""`. On the box, create `/opt/team-works/.ssh` owned `deploy:deploy` mode `0700`, and append `deploy_key.pub`'s contents to `/opt/team-works/.ssh/authorized_keys` (mode `0600`, owned `deploy:deploy`). The private half (`deploy_key`) is what step 9 puts into the `DEPLOY_SSH_KEY` GitHub Actions secret.
+3. Verify the `deploy` user's SSH key works (`ssh deploy@<host>`), **then and only then** manually flip `PasswordAuthentication no` and `PermitRootLogin no` in `sshd_config` and restart `sshd`. Not automated — a mistake here locks you out, and it's cheap to do carefully by hand once.
+4. Install the systemd unit: copy `deploy/systemd/team-works.service` to `/etc/systemd/system/team-works.service`, then `systemctl daemon-reload && systemctl enable team-works` (don't start it yet — there's no release at `/opt/team-works/current` until the first deploy runs).
+5. Install the nginx site: replace the placeholder domain in `deploy/nginx/team-works.conf`, copy it to `/etc/nginx/sites-available/team-works.conf`, symlink it into `sites-enabled`, then `nginx -t && systemctl reload nginx`. Certbot (next step) needs an existing enabled site to attach the certificate to.
+6. `certbot --nginx -d <your-real-domain>` once DNS points at the box.
+7. Write `/opt/team-works/shared/.env` from `deploy/env.production.example`, with real generated secrets (`AUTH_SECRET` = `ZERO_AUTH_SECRET`, both ≥32 bytes) and real SMTP credentials.
+   - **Set `APP_URL` to the real production domain**, replacing the placeholder `https://team-works.example.com` — the same domain Certbot issued a cert for in step 6. It is auth-critical: magic-link URLs, the `Origin` check, and the `Secure` cookie flag all derive from it.
+   - **Set the Postgres role's password to match `DATABASE_URL`.** `provision-vps.sh` creates the `team_works` role and database but deliberately sets no password (a secret does not belong in a checked-in script): `sudo -u postgres psql -c "ALTER ROLE team_works WITH PASSWORD '...';"`, using the same password you put in `DATABASE_URL`.
+   - Lock the file down once written — it holds every production secret, and `deploy.sh` symlinks each release's `.env` at it: `chown deploy:deploy /opt/team-works/shared/.env && chmod 0600 /opt/team-works/shared/.env`.
+8. Copy `deploy.sh` to `/opt/team-works/deploy.sh` (the CI SSH step runs this fixed path — updates to the repo's `deploy.sh` need re-copying here; a known small gap in deployment.md's design, not fixed by this task).
+9. Add the three GitHub Actions secrets yourself (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — the last being the private `deploy_key` from step 2) — not something I can or should do on your behalf.
+10. Push to `main`; confirm against the Definition of Done below. The first push will start `team-works.service` for real (via `deploy.sh`'s `sudo systemctl restart team-works`) — nothing before this step actually runs the app.
 
 ## 7. Definition of Done (from the issue, unchanged)
 

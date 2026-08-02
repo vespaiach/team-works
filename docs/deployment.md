@@ -35,7 +35,7 @@ Debian 13 (trixie), assumed as a clean VPS with root SSH access initially.
 4. **The `deploy` user.** A dedicated, non-root system user that owns the app and is what GitHub Actions authenticates as:
 
    ```bash
-   adduser --system --group --home /opt/team-works deploy
+   adduser --system --group --home /opt/team-works --shell /bin/bash deploy
    mkdir -p /opt/team-works/releases /opt/team-works/shared
    chown -R deploy:deploy /opt/team-works
    ```
@@ -157,6 +157,8 @@ Each release symlinks this file in at deploy time (§3, §7) rather than each re
 
 testing.md §9 fixes the CI shape and names this document as owner of the actual provider config: a **fast** stage (Postgres service container, migrate, unit + integration tests) on every push, and a **slow** stage (additionally `zero-cache` and Mailpit via `docker-compose.e2e.yml`, running E2E) on merge to `main` only, given the Docker-and-browser cost. Deploying anything that hasn't passed both is not a risk worth taking for the sake of a simpler workflow, so the deploy job is gated behind both — one workflow, three jobs:
 
+> **As of 2026-08-02 (P0.1, [GitHub issue #4](https://github.com/vespaiach/team-works/issues/4)):** the `deploy.sh` and CI shape below is the eventual target, once Foundation A/B land. The shipped `deploy.sh` and `ci.yml` today omit `db:migrate` and the test steps — see [the P0.1 design spec](./superpowers/specs/2026-08-02-vps-provisioning-deploy-pipeline-design.md) §3 for why.
+
 ```yaml
 # .github/workflows/ci.yml
 name: ci
@@ -198,7 +200,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: appleboy/ssh-action@v1
+      # pinned to a commit SHA, not the mutable v1 tag — this step receives the
+      # production SSH private key
+      - uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
@@ -214,7 +218,10 @@ jobs:
 #!/usr/bin/env bash
 set -euo pipefail
 
-PREV=$(readlink -f /opt/team-works/current || true)
+# the -L guard matters: GNU `readlink -f` on a nonexistent `current` still exits
+# 0 and echoes the literal path, so without it PREV is non-empty even on a
+# first-ever deploy and rollback writes a self-referential `current -> current`
+PREV=$([ -L /opt/team-works/current ] && readlink -f /opt/team-works/current || true)
 RELEASE=/opt/team-works/releases/$(date +%Y%m%d%H%M%S)
 
 git clone --depth 1 --branch main <repo-url> "$RELEASE"
@@ -237,9 +244,14 @@ for _ in $(seq 1 10); do
 done
 
 if [ "$healthy" = false ]; then
-  echo "health check failed, rolling back to $PREV"
-  ln -sfn "$PREV" /opt/team-works/current
-  sudo systemctl restart team-works
+  if [ -n "$PREV" ] && [ -d "$PREV" ]; then
+    echo "health check failed, rolling back to $PREV"
+    ln -sfn "$PREV" /opt/team-works/current
+    sudo systemctl restart team-works
+  else
+    echo "health check failed and there is no previous release to roll back to"
+    rm -f /opt/team-works/current
+  fi
   exit 1
 fi
 
@@ -312,6 +324,8 @@ Both artifacts are produced and pushed **in the same run**, never on separate sc
 ---
 
 ## 10. First boot
+
+> **As of 2026-08-02 (P0.1, [GitHub issue #4](https://github.com/vespaiach/team-works/issues/4)):** steps 4 and 5 below describe the eventual target — today's shipped `deploy.sh` has no `db:migrate` step and there is no `zero-cache` unit to bring up yet. For the runbook that matches what actually ships today, see [the P0.1 design spec](./superpowers/specs/2026-08-02-vps-provisioning-deploy-pipeline-design.md) §6 (and §3 for why).
 
 1. Provision the box (§2): packages, firewall, the `deploy` user, Postgres with `wal_level=logical`, the attachments directory.
 2. Write `/opt/team-works/shared/.env` (§6): freshly generated `AUTH_SECRET`/`ZERO_AUTH_SECRET` (identical value), real SMTP credentials, `APP_URL` set to the production domain.
