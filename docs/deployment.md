@@ -2,6 +2,8 @@
 
 _Deployment and operations runbook for v1. Companion to [team-works-concept-brief.md](./team-works-concept-brief.md), [data-model.md](./data-model.md), [auth.md](./auth.md), [attachments.md](./attachments.md) and [testing.md](./testing.md). Status: approved 2026-07-31._
 
+_Revised 2026-08-02: §2's provisioning target changed from Ubuntu 22.04 LTS (or Debian 12) to Debian 13, per [the P0.1 design spec](./superpowers/specs/2026-08-02-vps-provisioning-deploy-pipeline-design.md)._
+
 This document gets the app from a git repository to a running production instance on a single VPS, and covers what keeps it running afterward: provisioning, the deploy pipeline, environment and secrets, the three background timers other specs already defined, migrations and the one operation among them that needs special handling — resetting the `zero-cache` replica — and backups with a restore drill. It is a runbook, not new application code; nothing here changes the schema, the permission model, or the sync contract.
 
 **Out of scope**, named so it doesn't read as an oversight: a monitoring/alerting stack, log aggregation, multi-region or high-availability deployment, blue-green or zero-downtime releases, and a CDN. All are disproportionate to a single team under twenty on one VPS; if usage ever outgrows that, this document is the one to revise.
@@ -25,11 +27,11 @@ Only nginx is reachable from outside the box. Everything else binds to `localhos
 
 ## 2. Provisioning
 
-Ubuntu 22.04 LTS (or Debian 12), assumed as a clean VPS with root SSH access initially.
+Debian 13 (trixie), assumed as a clean VPS with root SSH access initially.
 
-1. **Base packages.** Node.js 20.x (matching local-dev.md's `.nvmrc`), PostgreSQL 15+, Docker, nginx, Certbot (`certbot` + `python3-certbot-nginx`).
+1. **Base packages.** Node.js 20.x and PostgreSQL 15+ ship natively in Debian 13's own apt repos (20.19.x and PostgreSQL 17 respectively) — `apt install nodejs npm postgresql postgresql-contrib`, no NodeSource or PGDG repo needed. Docker via its official repo (the `trixie` codename is supported directly), nginx, Certbot (`certbot` + `python3-certbot-nginx`). Automated by `scripts/provision-vps.sh`.
 2. **Firewall.** `ufw allow 22,80,443/tcp`, `ufw enable`. Nothing else is exposed.
-3. **SSH.** Key-only auth (`PasswordAuthentication no`); disable root login once the `deploy` user (below) exists and has been verified to work.
+3. **SSH.** Key-only auth (`PasswordAuthentication no`); disable root login once the `deploy` user (below) exists and has been verified to work. **Deliberately manual** — not part of `scripts/provision-vps.sh` — a mistake here is a lockout.
 4. **The `deploy` user.** A dedicated, non-root system user that owns the app and is what GitHub Actions authenticates as:
 
    ```bash
@@ -44,7 +46,7 @@ Ubuntu 22.04 LTS (or Debian 12), assumed as a clean VPS with root SSH access ini
    # /etc/sudoers.d/deploy
    deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart team-works, /usr/bin/systemctl restart zero-cache
    ```
-5. **Postgres.** Same steps as local-dev.md §2 — create the role and database, set `wal_level = logical` in `postgresql.conf`, restart, confirm with `SHOW wal_level`.
+5. **Postgres.** Same steps as local-dev.md §2 — create the role and database, set `wal_level = logical` in `postgresql.conf` (Debian 13: `/etc/postgresql/17/main/postgresql.conf`), restart, confirm with `SHOW wal_level`.
 6. **Attachments directory**, outside any release tree since it's persistent data, not code:
 
    ```bash
