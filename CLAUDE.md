@@ -19,7 +19,9 @@ All four are dated 2026-07-31 and reconciled with each other. A change that cont
 ```bash
 npm run dev      # Next.js dev server on :3000 (prefer preview_start with "team-works-dev" in .claude/launch.json)
 npm run build
-npm run lint
+npm run lint     # Biome lint (biome.json), recommended rules; docs/prototype/ is excluded
+npm run format   # Biome format --write
+npm run check    # Biome check --write (format + lint + organize imports, all auto-fixed)
 ```
 
 No test runner yet — adding one (Vitest + Playwright, per [docs/testing.md](docs/testing.md)) is part of build step 1.
@@ -60,6 +62,8 @@ Decided, non-obvious, easy to violate — full detail in [docs/data-model.md](do
 ## Development
 
 **Never commit directly to `main`.** Create a feature branch for every change, including docs — `git checkout -b <branch> main` before touching files.
+
+**Run `npm run check` before opening a PR.** It formats and lints (auto-fixing what it can) — a PR shouldn't carry Biome findings the tool would've fixed for free.
 
 **Open a pull request when a change is done.** Don't merge to `main` yourself — push the branch and open a PR for review.
 
