@@ -63,6 +63,8 @@ Decided, non-obvious, easy to violate — full detail in [docs/data-model.md](do
 
 **Never commit directly to `main`.** Create a feature branch for every change, including docs — `git checkout -b <branch> main` before touching files.
 
+**Run `npm run check` before opening a PR.** It formats and lints (auto-fixing what it can) — a PR shouldn't carry Biome findings the tool would've fixed for free.
+
 **Open a pull request when a change is done.** Don't merge to `main` yourself — push the branch and open a PR for review.
 
 ## Conventions
