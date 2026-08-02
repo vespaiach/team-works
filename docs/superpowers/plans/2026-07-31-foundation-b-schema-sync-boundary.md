@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the full Drizzle schema for all fourteen tables, the `zero_data` publication that defines Zero's sync boundary, and the migration/seed/admin tooling around them — so Plan C (auth) has `user`/`invite`/`login_token`/`session` to write against and Plan D (Zero + permissions + shell) has a real publication to sync from.
+**Goal:** Build the full Drizzle schema for all fifteen tables, the `zero_data` publication that defines Zero's sync boundary, and the migration/seed/admin tooling around them — so Plan C (auth) has `user`/`invite`/`login_token`/`session` to write against and Plan D (Zero + permissions + shell) has a real publication to sync from.
 
 **Architecture:** Schema lives in `src/lib/db/schema/*.ts`, one file per entity group, re-exported from an `index.ts` barrel. Everything expressible in Drizzle's `pgTable` API (columns, simple FKs, single-table `CHECK`s, ordinary and partial indexes) is declared there and captured by `drizzle-kit generate`. The handful of things Drizzle cannot express — `COLLATE "C"`, the two self-referential/cross-table composite foreign keys with column-scoped `ON DELETE SET NULL`, the two partial unique indexes on `notification`, and `CREATE PUBLICATION` itself — go in one hand-written custom SQL migration applied immediately after the generated one. This plan assumes **Foundation A is complete** (dependencies installed, `env.ts` exists, `team_works_dev` and `team_works_test` databases exist natively with `wal_level=logical`).
 
@@ -32,7 +32,7 @@ src/lib/db/schema/types.ts                      # new — bytea customType
 src/lib/db/schema/user.ts                       # new
 src/lib/db/schema/project.ts                    # new — project, project_member, milestone
 src/lib/db/schema/issue.ts                      # new — issue, issue_counter
-src/lib/db/schema/collab.ts                     # new — label, issue_label, comment, attachment, notification
+src/lib/db/schema/collab.ts                     # new — label, issue_label, comment, attachment, notification, notification_email
 src/lib/db/schema/auth.ts                       # new — invite, login_token, session
 src/lib/db/schema/index.ts                      # new — barrel re-export
 drizzle/                                        # generated migrations (drizzle-kit output)
@@ -112,13 +112,13 @@ git commit -m "chore: add drizzle config, db client, touched() helper"
 
 ---
 
-### Task 2: Full schema — all fourteen tables
+### Task 2: Full schema — all fifteen tables
 
 **Files:**
 - Create: `src/lib/db/schema/types.ts`, `src/lib/db/schema/user.ts`, `src/lib/db/schema/project.ts`, `src/lib/db/schema/issue.ts`, `src/lib/db/schema/collab.ts`, `src/lib/db/schema/auth.ts`, `src/lib/db/schema/index.ts`
 
 **Interfaces:**
-- Produces: every table export later tasks, Plan C and Plan D import by name — `user`, `project`, `projectMember`, `milestone`, `issue`, `issueCounter`, `label`, `issueLabel`, `comment`, `attachment`, `notification`, `invite`, `loginToken`, `session`.
+- Produces: every table export later tasks, Plan C and Plan D import by name — `user`, `project`, `projectMember`, `milestone`, `issue`, `issueCounter`, `label`, `issueLabel`, `comment`, `attachment`, `notification`, `notificationEmail`, `invite`, `loginToken`, `session`.
 - Note on partial indexes: this task uses Drizzle's `.on(...).where(sql\`...\`)` index builder for the six partial indexes named in data-model.md §10 (`issue.assignee_id`, `issue.milestone_id`, `issue.parent_issue_id`, `issue.due_date`, `attachment.comment_id`, `notification` unread) and the two `lower(email)`/`lower(name)` functional unique indexes. Confirm during Step 8 (generated-SQL review) that the installed `drizzle-kit` version actually emits the `WHERE` clause and the `lower(...)` expression — if it silently drops either, move the affected index into Task 4's custom migration instead (same SQL, just hand-written) rather than leaving it missing.
 
 - [ ] **Step 1: `bytea` custom type**
@@ -274,7 +274,7 @@ export const issueCounter = pgTable('issue_counter', {
 
 ```ts
 // src/lib/db/schema/collab.ts
-import { pgTable, uuid, text, bigint, timestamp, primaryKey, unique, uniqueIndex, index, check } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, integer, bigint, timestamp, primaryKey, unique, uniqueIndex, index, check } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import { user } from './user'
 import { issue } from './issue'
@@ -354,7 +354,30 @@ export const notification = pgTable('notification', {
   // builder here is not declared unique because the WHERE-scoped uniqueness
   // combination is safer to hand-verify against the spec's literal SQL.
 }))
+
+// notifications.md §5 — the email outbox. NOT synced: it is absent from the
+// publication (Task 4), and Task 7 asserts that. One row per notification,
+// inserted in the same transaction as the notification itself.
+export const notificationEmail = pgTable('notification_email', {
+  id: uuid('id').primaryKey(),
+  notificationId: uuid('notification_id').notNull().references(() => notification.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('pending'),
+  attempts: integer('attempts').notNull().default(0),
+  nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+  lastError: text('last_error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // deliberately no updated_at — status/attempts/next_attempt_at are worker
+  // bookkeeping, and notifications.md §5 defines no updated_at for this table.
+}, (table) => ({
+  statusCheck: check('notification_email_status_check', sql`${table.status} IN ('pending','sent','failed')`),
+  // Derived from notifications.md §5's worker query ("status = 'pending' AND
+  // next_attempt_at <= now(), oldest first"), not stated as an index in that
+  // document. Drop it if the generated SQL review in Step 8 shows it is redundant.
+  pendingIdx: index('notification_email_pending_idx').on(table.nextAttemptAt).where(sql`${table.status} = 'pending'`),
+}))
 ```
+
+`integer` joins the `drizzle-orm/pg-core` import list at the top of this file for `attempts`.
 
 - [ ] **Step 6: `invite`, `login_token`, `session`**
 
@@ -431,7 +454,7 @@ npm run db:generate
 (This script doesn't exist until Task 3 adds it — for this step, run the underlying command directly: `npx drizzle-kit generate`.)
 
 Open the generated file under `drizzle/0000_*.sql` and check, against data-model.md §7/§10:
-- All fourteen tables are present with `snake_case` names.
+- All fifteen tables are present with `snake_case` names.
 - Every `CHECK` constraint from Step 2–6 appears.
 - Partial indexes (`WHERE ... IS NOT NULL`) and the two `lower(...)` functional indexes render correctly — **if any silently dropped their predicate or expression**, note it here and move that specific index into Task 4's custom migration by hand instead.
 
@@ -441,7 +464,7 @@ Do not apply this migration yet — Task 3 does that as part of its own test cyc
 
 ```bash
 git add src/lib/db/schema drizzle
-git commit -m "feat: add full drizzle schema for all fourteen tables"
+git commit -m "feat: add full drizzle schema for all fifteen tables"
 ```
 
 ---
@@ -1006,6 +1029,8 @@ git commit -m "feat: add admin:grant and db:seed scripts"
 
 testing.md §6: "Query `pg_publication_tables` and `pg_publication_columns` for `zero_data`; assert exactly the ten tables in data-model.md §3 and, for `user`, exactly the six listed columns. Assert `invite`, `login_token`, `session` and `issue_counter` are absent."
 
+`notification_email` (notifications.md §5) joins that exclusion list — it postdates testing.md §6's wording, but it is a non-synced server table under exactly the same rule.
+
 ```ts
 // tests/integration/publication.test.ts
 import { describe, it, expect } from 'vitest'
@@ -1039,12 +1064,12 @@ describe('zero_data publication (data-model.md §3)', () => {
     expect(cols).toEqual(USER_SYNCED_COLUMNS)
   })
 
-  it('never publishes issue_counter, invite, login_token, or session', async () => {
+  it('never publishes the non-synced server tables', async () => {
     const result = await db.execute<{ tablename: string }>(
       sql`SELECT tablename FROM pg_publication_tables WHERE pubname = 'zero_data'`
     )
     const tables = result.rows.map((r) => r.tablename)
-    for (const excluded of ['issue_counter', 'invite', 'login_token', 'session']) {
+    for (const excluded of ['issue_counter', 'invite', 'login_token', 'session', 'notification_email']) {
       expect(tables).not.toContain(excluded)
     }
   })
@@ -1074,7 +1099,7 @@ git commit -m "test: verify zero_data publication membership and column list"
 
 **Placeholder scan.** No TODOs. The one open branch (Task 5's fallback) is a named, fully-specified alternative from data-model.md §8 itself, not a placeholder — the plan states both outcomes concretely rather than assuming the happy path.
 
-**Type consistency.** `Tx` (Task 3) is the type every later integration test in this plan and in Plans C/D imports from `tests/db.ts`. Table export names (`user`, `project`, `projectMember`, `milestone`, `issue`, `issueCounter`, `label`, `issueLabel`, `comment`, `attachment`, `notification`, `invite`, `loginToken`, `session`) are fixed in Task 2 and used identically in Tasks 3, 5, 6, 7 — Plan C and Plan D should import these same names rather than re-declaring them.
+**Type consistency.** `Tx` (Task 3) is the type every later integration test in this plan and in Plans C/D imports from `tests/db.ts`. Table export names (`user`, `project`, `projectMember`, `milestone`, `issue`, `issueCounter`, `label`, `issueLabel`, `comment`, `attachment`, `notification`, `notificationEmail`, `invite`, `loginToken`, `session`) are fixed in Task 2 and used identically in Tasks 3, 5, 6, 7 — Plan C and Plan D should import these same names rather than re-declaring them.
 
 ---
 
