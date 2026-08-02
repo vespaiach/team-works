@@ -1,6 +1,10 @@
 # Team Works — implementation task breakdown
 
-_Design spec, 2026-08-02. How the build is sliced into tasks, why it is sliced that way, and which tasks exist._
+_Design spec, 2026-08-02. How the build is sliced into tasks, why it is sliced that way, which tasks exist,
+and what order they go in._
+
+**In a hurry?** §8 is the numbered backlog — 59 tasks in execution order, each mapped to its GitHub issue.
+Start at order 1.
 
 This document does not re-plan build step 1. Four detailed implementation plans for it already exist
 (`docs/superpowers/plans/2026-07-31-foundation-{a,b,c,d}-*.md`, ~4,350 lines). This document fixes the
@@ -403,7 +407,91 @@ single developer.
 
 ---
 
-## 8. Changes this spec requires elsewhere
+## 8. Execution order
+
+Every issue carries its position three ways, so the next thing to pick up is unambiguous from any view:
+
+- **Title prefix** — `01 · [INFRA/DEVOPS]: P0.1 — …`, zero-padded so a title sort is an order sort.
+- **Milestone** — `Phase 00` … `Phase 10`, giving per-phase progress and a filter
+  (`gh issue list --milestone "Phase 05 — Issues + board"`).
+- **Body banner** — the first line of every issue states its order, its phase, the issue to do before it,
+  and — where the two differ — its actual hard dependency.
+
+**The order column is a recommended sequence; the dependency column is the real constraint.** They are
+deliberately different. Phases 0–4 are a chain, so there the two coincide. From Phase 5 on the graph is
+wide (§7) and the sequence is one valid topological sort of many — a task whose hard dependency sits well
+above its predecessor can be pulled forward freely. With one developer the sequence is what matters; the
+dependency column is what makes reordering safe when priorities change.
+
+`B-4` (order 11, [#14](https://github.com/vespaiach/team-works/issues/14)) is the publication migration
+and the only task in the project that triggers [deployment.md](../../deployment.md) §8's replica reset.
+Nothing after it carries a migration.
+
+| # | Phase | Task | Issue | Deliverable | Hard dependency |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 00 | `P0.1` | [#4](https://github.com/vespaiach/team-works/issues/4) | Provision the VPS and wire the deploy pipeline | — |
+| 2 | 01 | `A-1` | [#5](https://github.com/vespaiach/team-works/issues/5) | Install the planned dependencies | #4 |
+| 3 | 01 | `A-2` | [#6](https://github.com/vespaiach/team-works/issues/6) | Delete scaffold cruft, add `.nvmrc`, rewrite `.env.example` | #5 |
+| 4 | 01 | `A-3` | [#7](https://github.com/vespaiach/team-works/issues/7) | Environment contract module | #6 |
+| 5 | 01 | `A-4` | [#8](https://github.com/vespaiach/team-works/issues/8) | Vitest configuration | #7 |
+| 6 | 01 | `A-5` | [#9](https://github.com/vespaiach/team-works/issues/9) | Playwright configuration | #8 |
+| 7 | 01 | `A-6` | [#10](https://github.com/vespaiach/team-works/issues/10) | `zero-cache` Docker Compose + native Postgres checklist | #9 |
+| 8 | 02 | `B-1` | [#11](https://github.com/vespaiach/team-works/issues/11) | Drizzle config, db client, `touched()` helper | #10 |
+| 9 | 02 | `B-2` | [#12](https://github.com/vespaiach/team-works/issues/12) | Full schema — all fifteen tables | #11 |
+| 10 | 02 | `B-3` | [#13](https://github.com/vespaiach/team-works/issues/13) | Migration tooling, rollback test harness, first round-trip test | #12 |
+| 11 | 02 | `B-4` | [#14](https://github.com/vespaiach/team-works/issues/14) | Custom SQL migration — collation, composite FKs, dedup indexes, publication | #13 |
+| 12 | 02 | `B-5` | [#15](https://github.com/vespaiach/team-works/issues/15) | Composite-FK cascade verification (data-model.md §8) | #14 |
+| 13 | 02 | `B-6` | [#16](https://github.com/vespaiach/team-works/issues/16) | `admin:grant` and `db:seed` scripts | #15 |
+| 14 | 02 | `B-7` | [#17](https://github.com/vespaiach/team-works/issues/17) | Sync-scope test — publication membership | #16 |
+| 15 | 03 | `C-1` | [#18](https://github.com/vespaiach/team-works/issues/18) | `permissions.ts` — the pure predicate module | #17 |
+| 16 | 03 | `C-2` | [#19](https://github.com/vespaiach/team-works/issues/19) | Token primitives, JWT, `requireUser()`, `loadActor()` | #18 |
+| 17 | 03 | `C-3` | [#20](https://github.com/vespaiach/team-works/issues/20) | Supporting infra — mail, cookies, origin check, next-path validation | #19 |
+| 18 | 03 | `C-4` | [#21](https://github.com/vespaiach/team-works/issues/21) | Sign-in and redemption | #20 |
+| 19 | 03 | `C-5` | [#22](https://github.com/vespaiach/team-works/issues/22) | Refresh and rotation | #21 |
+| 20 | 03 | `C-6` | [#23](https://github.com/vespaiach/team-works/issues/23) | Sign-out, invites, deactivation, and the last-admin guard | #22 |
+| 21 | 03 | `C-7` | [#24](https://github.com/vespaiach/team-works/issues/24) | Route protection — `middleware.ts` | #23 |
+| 22 | 03 | `C-8` | [#25](https://github.com/vespaiach/team-works/issues/25) | Boot-failure test and `auth:purge` | #24 |
+| 23 | 04 | `D-1` | [#26](https://github.com/vespaiach/team-works/issues/26) | Zero client schema + schema-parity test | #25 |
+| 24 | 04 | `D-2` | [#27](https://github.com/vespaiach/team-works/issues/27) | Verify `zero-cache` environment variables and image tag | #26 |
+| 25 | 04 | `D-3` | [#28](https://github.com/vespaiach/team-works/issues/28) | Zero client construction | #27 |
+| 26 | 04 | `D-4` | [#29](https://github.com/vespaiach/team-works/issues/29) | App shell — responsive layout, React Aria, sign-in page | #28 |
+| 27 | 04 | `D-5` | [#30](https://github.com/vespaiach/team-works/issues/30) | The one synced query | #29 |
+| 28 | 04 | `D-6` | [#31](https://github.com/vespaiach/team-works/issues/31) | E2E infrastructure — dockerized stack, fixtures | #30 |
+| 29 | 04 | `D-7` | [#32](https://github.com/vespaiach/team-works/issues/32) | E2E scenario — sign-in | #31 |
+| 30 | 04 | `D-8` | [#33](https://github.com/vespaiach/team-works/issues/33) | E2E verification — Postgres `date` mapping | #32 |
+| 31 | 04 | `D-9` | [#34](https://github.com/vespaiach/team-works/issues/34) | E2E verification — Zero re-invokes `auth` on token rejection | #33 |
+| 32 | 05 | `P5.1` | [#35](https://github.com/vespaiach/team-works/issues/35) | `createIssue` mutator and create form | #30 |
+| 33 | 05 | `P5.2` | [#36](https://github.com/vespaiach/team-works/issues/36) | `updateIssue` mutator and issue detail view | #35 |
+| 34 | 05 | `P5.3` | [#37](https://github.com/vespaiach/team-works/issues/37) | Kanban board, read-only | #36 |
+| 35 | 05 | `P5.4` | [#38](https://github.com/vespaiach/team-works/issues/38) | Board drag-and-drop | #37 |
+| 36 | 05 | `P5.5` | [#39](https://github.com/vespaiach/team-works/issues/39) | Board re-grouping by assignee and priority | #38 |
+| 37 | 05 | `P5.6` | [#40](https://github.com/vespaiach/team-works/issues/40) | Delete and cancel an issue | #36 |
+| 38 | 05 | `P5.7` | [#41](https://github.com/vespaiach/team-works/issues/41) | Disabled-control convention and the assigned-non-member state | #36 |
+| 39 | 06 | `P6.1` | [#42](https://github.com/vespaiach/team-works/issues/42) | Project mutators and settings UI | #30 |
+| 40 | 06 | `P6.2` | [#43](https://github.com/vespaiach/team-works/issues/43) | Project membership | #42 |
+| 41 | 06 | `P6.3` | [#44](https://github.com/vespaiach/team-works/issues/44) | Milestones | #42 |
+| 42 | 06 | `P6.4` | [#45](https://github.com/vespaiach/team-works/issues/45) | Frappe Gantt React wrapper | #44 |
+| 43 | 06 | `P6.5` | [#46](https://github.com/vespaiach/team-works/issues/46) | Roadmap view | #45 |
+| 44 | 06 | `P6.6` | [#47](https://github.com/vespaiach/team-works/issues/47) | Roadmap drag-to-reschedule | #46 |
+| 45 | 07 | `P7.1` | [#48](https://github.com/vespaiach/team-works/issues/48) | Comments | #36 |
+| 46 | 07 | `P7.2` | [#49](https://github.com/vespaiach/team-works/issues/49) | Mentions | #48 |
+| 47 | 07 | `P7.3` | [#50](https://github.com/vespaiach/team-works/issues/50) | Notification creation | #49 |
+| 48 | 07 | `P7.4` | [#51](https://github.com/vespaiach/team-works/issues/51) | In-app notification feed | #50 |
+| 49 | 07 | `P7.5` | [#52](https://github.com/vespaiach/team-works/issues/52) | Email outbox and worker | #50 |
+| 50 | 08 | `P8.1` | [#53](https://github.com/vespaiach/team-works/issues/53) | Label mutators and management UI | #30 |
+| 51 | 08 | `P8.2` | [#54](https://github.com/vespaiach/team-works/issues/54) | Applying labels to issues | #53, #37 |
+| 52 | 08 | `P8.3` | [#55](https://github.com/vespaiach/team-works/issues/55) | Sub-issues | #40 |
+| 53 | 08 | `P8.4` | [#56](https://github.com/vespaiach/team-works/issues/56) | Attachment upload | #36 |
+| 54 | 08 | `P8.5` | [#57](https://github.com/vespaiach/team-works/issues/57) | Attachment download, delete, and orphan reclamation | #56 |
+| 55 | 08 | `P8.6` | [#58](https://github.com/vespaiach/team-works/issues/58) | Priority and due-date polish | #39 |
+| 56 | 09 | `P9.1` | [#59](https://github.com/vespaiach/team-works/issues/59) | Responsive board on phones | #39 |
+| 57 | 09 | `P9.2` | [#60](https://github.com/vespaiach/team-works/issues/60) | Responsive roadmap on phones | #47 |
+| 58 | 09 | `P9.3` | [#61](https://github.com/vespaiach/team-works/issues/61) | Responsive issue detail and navigation | #58 |
+| 59 | 10 | `P10.1` | [#62](https://github.com/vespaiach/team-works/issues/62) | Nightly backups and the restore drill | #57 |
+
+---
+
+## 9. Changes this spec requires elsewhere
 
 - **`docs/superpowers/plans/2026-07-31-foundation-b-schema-sync-boundary.md`** — Task 2 gains
   `notification_email` ([notifications.md](../../notifications.md) §5), making it fifteen tables; Task 7's
