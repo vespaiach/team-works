@@ -4,7 +4,10 @@ set -euo pipefail
 REPO_URL="https://github.com/vespaiach/team-works.git"
 BASE=/opt/team-works
 
-PREV=$(readlink -f "$BASE/current" || true)
+# -L guard matters: GNU `readlink -f` on a nonexistent `current` still exits 0
+# and echoes the literal path, which would make PREV non-empty on a first-ever
+# deploy and produce a self-referential `current -> current` symlink on rollback.
+PREV=$([ -L "$BASE/current" ] && readlink -f "$BASE/current" || true)
 RELEASE="$BASE/releases/$(date +%Y%m%d%H%M%S)"
 
 git clone --depth 1 --branch main "$REPO_URL" "$RELEASE"
@@ -26,9 +29,14 @@ for _ in $(seq 1 10); do
 done
 
 if [ "$healthy" = false ]; then
-  echo "health check failed, rolling back to $PREV"
-  ln -sfn "$PREV" "$BASE/current"
-  sudo systemctl restart team-works
+  if [ -n "$PREV" ] && [ -d "$PREV" ]; then
+    echo "health check failed, rolling back to $PREV"
+    ln -sfn "$PREV" "$BASE/current"
+    sudo systemctl restart team-works
+  else
+    echo "health check failed and there is no previous release to roll back to"
+    rm -f "$BASE/current"
+  fi
   exit 1
 fi
 

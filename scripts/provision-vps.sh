@@ -9,6 +9,7 @@ set -euo pipefail
 
 apt-get update
 apt-get install -y \
+  git sudo \
   nodejs npm \
   postgresql postgresql-contrib \
   nginx \
@@ -34,7 +35,7 @@ ufw --force enable
 
 # --- deploy user: owns the app, is who GitHub Actions authenticates as ---
 if ! id deploy >/dev/null 2>&1; then
-  adduser --system --group --home /opt/team-works deploy
+  adduser --system --group --home /opt/team-works --shell /bin/bash deploy
 fi
 mkdir -p /opt/team-works/releases /opt/team-works/shared
 chown -R deploy:deploy /opt/team-works
@@ -54,9 +55,18 @@ fi
 sed -i "s/^#\?wal_level.*/wal_level = logical/" "$PG_CONF"
 systemctl restart postgresql
 
+# --- Postgres: role + database (idempotent) ---
+# No password is set here — that is a secret. The operator sets it by hand to
+# match DATABASE_URL in /opt/team-works/shared/.env:
+#   sudo -u postgres psql -c "ALTER ROLE team_works WITH PASSWORD '...';"
+# See runbook §6.
+sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = 'team_works'" | grep -q 1 || sudo -u postgres createuser team_works
+sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'team_works'" | grep -q 1 || sudo -u postgres createdb -O team_works team_works
+
 # --- attachments directory: outside any release tree, persistent data ---
 mkdir -p /var/lib/team-works/attachments
 chown deploy:deploy /var/lib/team-works/attachments
 
 echo "Provisioning complete."
-echo "Next: verify 'ssh deploy@<host>' works, THEN harden SSH by hand (see runbook §6 step 2)."
+echo "Next: authorize the deploy SSH key, verify 'ssh deploy@<host>' works, THEN"
+echo "harden SSH by hand (see runbook §6 steps 2-3)."
