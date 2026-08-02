@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  verify:
+  fast:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,3 +22,22 @@ jobs:
       - run: npm run lint
 
       - run: npm run build
+
+  e2e:
+    needs: fast
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "e2e - no scenarios yet, enabled once D-7 (E2E infrastructure) lands"
+
+  deploy:
+    needs: e2e
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: /opt/team-works/deploy.sh
